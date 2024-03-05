@@ -134,11 +134,8 @@ defmodule Medappointsys.Patientlib do
                 Appointments.ordered_patient_appointments(doctor.id, patientStruct.id)
                 |> Enum.each(fn %Medappointsys.Schemas.Appointment{
                   status: status,
-                  reason: reason,
                   doctor: %Medappointsys.Schemas.Doctor{
-                    firstname: doctor_firstname,
                     lastname: doctor_lastname,
-                    specialization: specialization
                   },
                   date: %Medappointsys.Schemas.Date{
                     date: appointment_date
@@ -149,7 +146,7 @@ defmodule Medappointsys.Patientlib do
                   }
                 } ->
                 IO.write("""
-                | Doctor: #{doctor_firstname} #{doctor_lastname}, Specialty: #{specialization}, Date: #{appointment_date}, Time: #{start_time}-#{end_time}, Reason: #{reason}, Status: #{status}
+                | Your Appointment with Dr. #{doctor_lastname} scheduled on #{appointment_date} #{start_time}-#{end_time} is #{status}
                 |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
                 """)
                 end)
@@ -161,14 +158,6 @@ defmodule Medappointsys.Patientlib do
             end
     end
   end
-
-  def display do
-
-
-
-
-  end
-
 
   def requestAppoint(patientStruct) do
 
@@ -216,7 +205,9 @@ defmodule Medappointsys.Patientlib do
           month = IO.gets("") |> String.trim()
           day = IO.gets("") |> String.trim()
 
+
           # THIS IS A NEW COMMENT HEHEHEHEHE
+
         end
       end
     end
@@ -280,6 +271,38 @@ defmodule Medappointsys.Patientlib do
     end
   end
 
+  def displayPatientAppoint(patientStruct, appointInfo, type) do
+    IO.write("""
+    ╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+    | #{patientStruct.firstname} #{patientStruct.lastname}'s #{type} Appointments
+    |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
+    """)
+    Enum.each(appointInfo, fn %Appointment{
+      status: status,
+      reason: reason,
+      doctor: %Doctor{
+        firstname: doctor_firstname,
+        lastname: doctor_lastname,
+        specialization: specialization
+      },
+      date: %Date{
+        date: appointment_date
+      },
+      timerange: %Timerange{
+        start_time: start_time,
+        end_time: end_time
+      }
+    } ->
+    IO.write("""
+    | Doctor: #{doctor_firstname} #{doctor_lastname}, Specialty: #{specialization}, Date: #{appointment_date}, Time: #{start_time}-#{end_time}, Reason: #{reason}, Status: #{status}
+    |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
+    """)
+  end)
+    IO.write("""
+    ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+    """)
+  end
+
   def allAppoint(patientStruct) do
     confirmed = Appointments.confirmed_patient_appointments(patientStruct.id)
     pending = Appointments.pending_patient_appointments(patientStruct.id)
@@ -289,200 +312,32 @@ defmodule Medappointsys.Patientlib do
 
     appointInfo = confirmed ++ pending ++ completed ++ resched ++ cancelled
 
-    IO.write("""
-    ╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-    | #{patientStruct.firstname} #{patientStruct.lastname}'s All Appointments
-    |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
-    """)
-    Enum.each(appointInfo, fn %Appointment{
-      status: status,
-      reason: reason,
-      doctor: %Doctor{
-        firstname: doctor_firstname,
-        lastname: doctor_lastname,
-        specialization: specialization
-      },
-      date: %Date{
-        date: appointment_date
-      },
-      timerange: %Timerange{
-        start_time: start_time,
-        end_time: end_time
-      }
-    } ->
-    IO.write("""
-    | Doctor: #{doctor_firstname} #{doctor_lastname}, Specialty: #{specialization}, Date: #{appointment_date}, Time: #{start_time}-#{end_time}, Reason: #{reason}, Status: #{status}
-    |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
-    """)
-  end)
-    IO.write("""
-    ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-    """)
+    displayPatientAppoint(patientStruct, appointInfo, "All")
   end
 
   def activeAppoint(patientStruct) do
     appointInfo = Appointments.confirmed_patient_appointments(patientStruct.id)
-    IO.write("""
-    ╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-    | #{patientStruct.firstname} #{patientStruct.lastname}'s Active Appointments
-    |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
-    """)
-    Enum.each(appointInfo, fn %Appointment{
-      status: status,
-      reason: reason,
-      doctor: %Doctor{
-        firstname: doctor_firstname,
-        lastname: doctor_lastname,
-        specialization: specialization
-      },
-      date: %Date{
-        date: appointment_date
-      },
-      timerange: %Timerange{
-        start_time: start_time,
-        end_time: end_time
-      }
-    } ->
-    IO.write("""
-    | Doctor: #{doctor_firstname} #{doctor_lastname}, Specialty: #{specialization}, Date: #{appointment_date}, Time: #{start_time}-#{end_time}, Reason: #{reason}, Status: #{status}
-    |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
-    """)
-  end)
-    IO.write("""
-    ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-    """)
+    displayPatientAppoint(patientStruct, appointInfo, "Active")
   end
 
   def pendingAppoint(patientStruct) do
     appointInfo = Appointments.pending_patient_appointments(patientStruct.id)
-    IO.write("""
-    ╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-    | #{patientStruct.firstname} #{patientStruct.lastname}'s Pending Appointments
-    |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
-    """)
-    Enum.each(appointInfo, fn %Appointment{
-      status: status,
-      reason: reason,
-      doctor: %Doctor{
-        firstname: doctor_firstname,
-        lastname: doctor_lastname,
-        specialization: specialization
-      },
-      date: %Date{
-        date: appointment_date
-      },
-      timerange: %Timerange{
-        start_time: start_time,
-        end_time: end_time
-      }
-    } ->
-    IO.write("""
-    | Doctor: #{doctor_firstname} #{doctor_lastname}, Specialty: #{specialization}, Date: #{appointment_date}, Time: #{start_time}-#{end_time}, Reason: #{reason}, Status: #{status}
-    |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
-    """)
-  end)
-    IO.write("""
-    ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-    """)
+    displayPatientAppoint(patientStruct, appointInfo, "Pending")
   end
 
   def completedAppoint(patientStruct) do
     appointInfo = Appointments.completed_patient_appointments(patientStruct.id)
-    IO.write("""
-    ╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-    | #{patientStruct.firstname} #{patientStruct.lastname}'s Completed Appointments
-    |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
-    """)
-    Enum.each(appointInfo, fn %Appointment{
-      status: status,
-      reason: reason,
-      doctor: %Doctor{
-        firstname: doctor_firstname,
-        lastname: doctor_lastname,
-        specialization: specialization
-      },
-      date: %Date{
-        date: appointment_date
-      },
-      timerange: %Timerange{
-        start_time: start_time,
-        end_time: end_time
-      }
-    } ->
-    IO.write("""
-    | Doctor: #{doctor_firstname} #{doctor_lastname}, Specialty: #{specialization}, Date: #{appointment_date}, Time: #{start_time}-#{end_time}, Reason: #{reason}, Status: #{status}
-    |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
-    """)
-  end)
-    IO.write("""
-    ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-    """)
+    displayPatientAppoint(patientStruct, appointInfo, "Completed")
   end
 
   def rescheduledAppoint(patientStruct) do
     appointInfo = Appointments.rescheduled_patient_appointments(patientStruct.id)
-    IO.write("""
-    ╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-    | #{patientStruct.firstname} #{patientStruct.lastname}'s Rescheduled Appointments
-    |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
-    """)
-    Enum.each(appointInfo, fn %Appointment{
-      status: status,
-      reason: reason,
-      doctor: %Doctor{
-        firstname: doctor_firstname,
-        lastname: doctor_lastname,
-        specialization: specialization
-      },
-      date: %Date{
-        date: appointment_date
-      },
-      timerange: %Timerange{
-        start_time: start_time,
-        end_time: end_time
-      }
-    } ->
-    IO.write("""
-    | Doctor: #{doctor_firstname} #{doctor_lastname}, Specialty: #{specialization}, Date: #{appointment_date}, Time: #{start_time}-#{end_time}, Reason: #{reason}, Status: #{status}
-    |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
-    """)
-  end)
-    IO.write("""
-    ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-    """)
+    displayPatientAppoint(patientStruct, appointInfo, "Rescheduled")
   end
 
   def cancelledAppoint(patientStruct) do
     appointInfo = Appointments.cancelled_patient_appointments(patientStruct.id)
-    IO.write("""
-    ╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-    | #{patientStruct.firstname} #{patientStruct.lastname}'s Cancelled Appointments
-    |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
-    """)
-    Enum.each(appointInfo, fn %Appointment{
-      status: status,
-      reason: reason,
-      doctor: %Doctor{
-        firstname: doctor_firstname,
-        lastname: doctor_lastname,
-        specialization: specialization
-      },
-      date: %Date{
-        date: appointment_date
-      },
-      timerange: %Timerange{
-        start_time: start_time,
-        end_time: end_time
-      }
-    } ->
-    IO.write("""
-    | Doctor: #{doctor_firstname} #{doctor_lastname}, Specialty: #{specialization}, Date: #{appointment_date}, Time: #{start_time}-#{end_time}, Reason: #{reason}, Status: #{status}
-    |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
-    """)
-  end)
-    IO.write("""
-    ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-    """)
+    displayPatientAppoint(patientStruct, appointInfo, "Cancelled")
   end
 
 end

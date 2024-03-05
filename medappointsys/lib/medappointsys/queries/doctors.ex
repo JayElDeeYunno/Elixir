@@ -15,8 +15,6 @@ defmodule Medappointsys.Queries.Doctors do
   #   |> Enum.flat_map(fn x -> x end)
   # end
 
-
-
   def get_doctor!(id), do: Repo.get!(Doctor, id)
 
   def create_doctor(attrs \\ %{}) do
