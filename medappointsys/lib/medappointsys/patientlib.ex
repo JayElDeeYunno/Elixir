@@ -216,10 +216,7 @@ defmodule Medappointsys.Patientlib do
           month = IO.gets("") |> String.trim()
           day = IO.gets("") |> String.trim()
 
-
-
-
-
+          # THIS IS A NEW COMMENT HEHEHEHEHE
         end
       end
     end
