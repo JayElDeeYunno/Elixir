@@ -6,9 +6,7 @@ defmodule Medappointsys.Main do
   alias Medappointsys.Queries.Doctors, as: Doctors
   alias Medappointsys.Queries.Admins, as: Admins
 
-  def main do
-    userTypeLoop()
-  end
+  def main, do: userTypeLoop()
 
   def userTypeLoop do
     IO.write("""
@@ -20,7 +18,7 @@ defmodule Medappointsys.Main do
     | (4) Exit          |
     ╰───────────────────╯
     """)
-    userType = IO.gets("") |> String.trim()
+    userType = inputCheck("Input", :integer)
 
     case userType do
       "1" ->
@@ -37,14 +35,14 @@ defmodule Medappointsys.Main do
 
       "4" -> System.halt(0)
 
-       _  -> userTypeLoop()
     end
+
   end
 
   def login(userType) do
     IO.puts("Enter login credentials")
-    email = IO.gets("Email: ") |> String.trim()
-    pass = IO.gets("Password: ") |> String.trim()
+    email = inputCheck("Email", :email)
+    pass = inputCheck("Password", :string)
 
     case userType do
 
@@ -70,45 +68,48 @@ defmodule Medappointsys.Main do
   end
 
   def register(1) do
-    # no checkers yet
     IO.puts("Enter the following fields")
-    email = IO.gets("Email: ") |> String.trim()
-    password = IO.gets("Password: ") |> String.trim()
-    firstName = IO.gets("FirstName: ") |> String.trim()
-    lastName = IO.gets("LastName: ") |> String.trim()
-    gender = IO.gets("Gender: ") |> String.trim()
-    age = IO.gets("Age: ") |> String.trim() |> String.to_integer()
-    address = IO.gets("Address: ") |> String.trim()
-    contactNum = IO.gets("ContactNum: ") |> String.trim()
+    email = inputCheck("Email", :email)
+    password = inputCheck("Password", :string)
+    firstName = inputCheck("FirstName", :alpha)
+    lastName = inputCheck("LastName", :alpha)
+    gender = inputCheck("Gender", :alpha)
+    age = inputCheck("Age", :integer)
+    address = inputCheck("Address", :string)
+    contactNum = inputCheck("ContactNum", :string)
 
-    case Patients.find_patient(email, password, firstName, lastName, gender, age, address, contactNum) do
-      nil -> Patients.create_patient(%{
-        email: email,
-        password: password,
-        firstname: firstName,
-        lastname: lastName,
-        gender: gender,
-        age: age,
-        address: address,
-        contact_num: contactNum
-      })
-      IO.puts("Patient Registered")
-      _ -> IO.puts("Account already exists")
-    end
+    # case Patients.find_patient(email, password, firstName, lastName, gender, age, address, contactNum) do
+    #   nil ->
+    #     case Patients.create_patient(%{
+    #       email: email,
+    #       password: password,
+    #       firstname: firstName,
+    #       lastname: lastName,
+    #       gender: gender,
+    #       age: age,
+    #       address: address,
+    #       contact_num: contactNum
+    #     }) do
+
+    #     end
+    #   # IO.puts("Patient Registered")
+    #   _ -> IO.puts("Account already exists")
+    # end
+
   end
 
   def register(2) do
     # no checkers yet
     IO.puts("Enter the following fields")
-    email = IO.gets("Email: ")
-    password = IO.gets("Password: ")
-    firstName = IO.gets("FirstName: ")
-    lastName = IO.gets("LastName: ")
-    gender = IO.gets("Gender: ")
-    age = IO.gets("Age: ") |> String.to_integer()
-    address = IO.gets("Address: ")
-    contactNum = IO.gets("ContactNum: ")
-    specialization = IO.gets("Specialization: ")
+    email = inputCheck("Email", :email)
+    password = inputCheck("Password", :string)
+    firstName = inputCheck("FirstName", :alpha)
+    lastName = inputCheck("LastName", :alpha)
+    gender = inputCheck("Gender", :alpha)
+    age = inputCheck("Age", :integer)
+    address = inputCheck("Address", :string)
+    contactNum = inputCheck("ContactNum", :string)
+    specialization = inputCheck("Specialization", :alpha)
 
     case Doctors.find_doctor(email, password, firstName, lastName, gender, age, address, contactNum, specialization) do
       nil -> Doctors.create_doctor(%{
@@ -126,6 +127,56 @@ defmodule Medappointsys.Main do
       _ -> IO.puts("Account already exists")
     end
 
+  end
+
+  def inputCheck(prompt, :alphanum) do
+    input = IO.gets(prompt <> ": ") |> String.trim()
+    if String.match?(input, ~r/^[a-zA-Z0-9]+$/) do
+      input
+    else
+      IO.puts("Invalid input. Please enter alphanumeric characters.")
+      inputCheck(prompt, :alphanum)
+    end
+  end
+
+  def inputCheck(prompt, :integer) do
+    input = IO.gets(prompt <> ": ") |> String.trim()
+    case Integer.parse(input) do
+      {value, _} when is_integer(value) -> value
+      _ ->
+        IO.puts("Invalid input. Please enter an integer.")
+        inputCheck(prompt, :integer)
+    end
+  end
+
+  def inputCheck(prompt, :alpha) do
+    input = IO.gets(prompt <> ": ") |> String.trim()
+    if String.match?(input, ~r/^[a-zA-Z]+$/) do
+      input
+    else
+      IO.puts("Invalid input. Please enter alphabet characters.")
+      inputCheck(prompt, :alpha)
+    end
+  end
+
+  def inputCheck(prompt, :email) do
+    input = IO.gets(prompt <> ": ") |> String.trim()
+    if String.match?(input, ~r/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/) do
+      input
+    else
+      IO.puts("Invalid input. Please enter a valid email address.")
+      inputCheck(prompt, :email)
+    end
+  end
+
+  def inputCheck(prompt, :string) do
+    input = IO.gets(prompt <> ": ") |> String.trim()
+    if input != "" do
+      input
+    else
+      IO.puts("Invalid input. Please enter a valid string.")
+      inputCheck(prompt, :string)
+    end
   end
 
   # def enclose(string, boxSize, symbol) do

@@ -61,7 +61,7 @@ defmodule Medappointsys.Adminlib do
       patientAdminOptionList(adminStruct)
       adminOptions(adminStruct)
 
-    "2" -> :ok
+    "2" ->
       viewPatientList()
       adminOptions(adminStruct)
 
@@ -132,9 +132,9 @@ defmodule Medappointsys.Adminlib do
 
   def displayAppointList(_adminStruct, appointInfo, type) do
     IO.write("""
-    ╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+    ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
     | #{type} Appointments List
-    |──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
+    |─────────────────────────────────────────────────────────────────────────────────────────────────|
     """)
     Enum.each(appointInfo, fn %Appointment{
       status: status,
@@ -157,12 +157,13 @@ defmodule Medappointsys.Adminlib do
       }
     } ->
     IO.write("""
-    | Doctor: #{doctor_firstname} #{doctor_lastname}, Specialty: #{specialization}, Patient: #{patient_firstname} #{patient_lastname}, Date: #{appointment_date}, Time: #{start_time}-#{end_time}, Reason: #{reason}, Status: #{status}
-    |──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
+    | Doctor: #{doctor_firstname} #{doctor_lastname}, Specialty: #{specialization}, Patient: #{patient_firstname} #{patient_lastname}
+    | Date: #{appointment_date}, Time: #{start_time}-#{end_time}, Reason: #{reason}, Status: #{status}
+    |─────────────────────────────────────────────────────────────────────────────────────────────────|
     """)
   end)
     IO.write("""
-    ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+    ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
     """)
   end
 
@@ -314,14 +315,20 @@ defmodule Medappointsys.Adminlib do
 
 
   def editPatient(patientStruct, field, type) do
-      # no checker
-      newVal = IO.gets("Enter new value: ") |> String.trim()
+    # no checker
+    newInput = IO.gets("Enter new value: ")
 
-
-      case Patients.update_patient(patientStruct, field, newVal) do
-        {:error, _} -> patientStruct
-        {:ok, newPatientStruct} -> newPatientStruct
+    newVal =
+      case type do
+        0 -> String.trim(newInput)
+        1 -> String.trim(newInput) |> String.to_integer
+        _ -> newInput
       end
+
+    case Patients.update_patient(patientStruct, field, newVal) do
+      {:error, _} -> patientStruct
+      {:ok, newPatientStruct} -> newPatientStruct
+    end
   end
 
 end

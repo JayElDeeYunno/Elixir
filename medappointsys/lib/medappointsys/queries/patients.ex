@@ -13,6 +13,7 @@ defmodule Medappointsys.Queries.Patients do
     %Patient{}
     |> Patient.changeset(attrs)
     |> Repo.insert()
+
   end
 
   def update_patient(%Patient{} = patient, attrs) do
