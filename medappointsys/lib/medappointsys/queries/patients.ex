@@ -16,9 +16,25 @@ defmodule Medappointsys.Queries.Patients do
   end
 
   def update_patient(%Patient{} = patient, attrs) do
-    patient
+    case patient
     |> Patient.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update() do
+      {:error, changeset} -> {:error, changeset}
+
+      {:ok, _updatedPatient} -> IO.puts("Update success")
+    end
+  end
+
+  def update_patient(%Patient{} = patient, field, value) do
+    case patient
+    |> Patient.changeset(%{field => value})
+    |> Repo.update() do
+      {:error, changeset} -> IO.puts("Update failed")
+                              {:error, changeset}
+
+      {:ok, updatedPatient} -> IO.puts("Update success")
+                                {:ok, updatedPatient}
+    end
   end
 
   def delete_patient(%Patient{} = patient) do

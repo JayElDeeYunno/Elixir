@@ -3,6 +3,8 @@ defmodule Medappointsys.Adminlib do
   alias Medappointsys.Patientlib
   alias Medappointsys.Queries.{Appointments, Patients, Doctors}
   alias Medappointsys.Schemas.{Patient, Doctor, Timerange, Admin, Appointment, Date}
+  alias Medappointsys.Repo
+
   def adminPrompt(userType) do
     IO.write("""
     ╭─────────────────╮
@@ -56,12 +58,12 @@ defmodule Medappointsys.Adminlib do
     case input do
 
     "1" ->
-      viewAppointList(adminStruct)
+      patientAdminOptionList(adminStruct)
       adminOptions(adminStruct)
 
     "2" -> :ok
-      # viewPatients(adminStruct)
-      # adminOptions(adminStruct)
+      viewPatientList()
+      adminOptions(adminStruct)
 
     "3" -> :ok
       # viewDoctors(adminStruct)
@@ -83,7 +85,7 @@ defmodule Medappointsys.Adminlib do
     end
   end
 
-  def viewAppointList(adminStruct) do
+  def patientAdminOptionList(adminStruct) do
 
     IO.write("""
     ╭───────────────────────────────╮
@@ -104,27 +106,27 @@ defmodule Medappointsys.Adminlib do
     case input do
     "1" ->
       allAppointList(adminStruct)
-      viewAppointList(adminStruct)
+      patientAdminOptionList(adminStruct)
     "2" ->
       activeAppointList(adminStruct)
-      viewAppointList(adminStruct)
+      patientAdminOptionList(adminStruct)
     "3" ->
       pendingAppointList(adminStruct)
-      viewAppointList(adminStruct)
+      patientAdminOptionList(adminStruct)
     "4" ->
       completedAppointList(adminStruct)
-      viewAppointList(adminStruct)
+      patientAdminOptionList(adminStruct)
     "5" ->
       rescheduledAppointList(adminStruct)
-      viewAppointList(adminStruct)
+      patientAdminOptionList(adminStruct)
     "6" ->
       cancelledAppointList(adminStruct)
-      viewAppointList(adminStruct)
-    # "7" -> :ok
+      patientAdminOptionList(adminStruct)
+    "7" -> :ok
 
-    # "8" -> System.halt(0)
+    "8" -> System.halt(0)
 
-    #  _  -> patientOptions(adminStruct)
+     _  -> patientAdminOptionList(adminStruct)
     end
   end
 
@@ -199,6 +201,127 @@ defmodule Medappointsys.Adminlib do
   def cancelledAppointList(adminStruct) do
     appointInfo = Appointments.list_appointments("Cancelled")
     displayAppointList(adminStruct, appointInfo, "Cancelled")
+  end
+
+  def viewPatientList() do
+    patientList = Patients.list_patients()
+
+    len = length(patientList)
+    back = len + 1
+    halt = len + 2
+
+    IO.write("""
+    ╭───────────────────────────────────────────────────────╮
+    | Full Patient List
+    |───────────────────────────────────────────────────────|
+    """)
+    Enum.with_index(patientList)
+    |> Enum.each(fn {element, index} ->
+    IO.write("""
+    | (#{index + 1}) #{element.firstname} #{element.lastname}
+    """)
+    end)
+
+    IO.write("""
+    | (#{back}) Back
+    | (#{halt}) Exit
+    ╰───────────────────────────────────────────────────────╯
+    """)
+
+        # no checker
+        input = IO.gets("") |> String.trim() |> String.to_integer()
+
+        case input do
+          ^back -> :ok
+          ^halt -> System.halt(0)
+          _ ->
+            cond do
+             input > len -> viewPatientList()
+             input <= len -> patient = Enum.fetch(patientList, input - 1)
+
+             patientAdminOption(elem(patient, 1))
+            end
+
+        end
+  end
+
+  # def hide(pass) do
+  #   String.replace(pass, ~r/./, "*")
+  # end
+
+  def patientAdminOption(patientStruct) do
+    IO.write("""
+    ╭───────────────────────────────────────────────────────╮
+    | Patient Details
+    |───────────────────────────────────────────────────────|
+    | Firstname: #{patientStruct.firstname}
+    | Lastname:  #{patientStruct.lastname}
+    | Gender: #{patientStruct.gender}
+    | Age: #{patientStruct.age}
+    | Address: #{patientStruct.address}
+    | ContactNum: #{patientStruct.contact_num}
+    | Email: #{patientStruct.email}
+    | Password: #{patientStruct.password}
+    |=======================================================|
+    | (1) Edit FirstName
+    | (2) Edit LastName
+    | (3) Edit Gender
+    | (4) Edit Age
+    | (5) Edit Address
+    | (6) Edit ContactNum
+    | (7) Edit Email
+    | (8) Edit Password
+    | (9) Back
+    | (10) Exit
+    |───────────────────────────────────────────────────────|
+    """)
+
+    input = IO.gets("") |> String.trim()
+
+    case input do
+    "1" ->
+      editPatient(patientStruct, :firstname, 0) |>
+      patientAdminOption()
+    "2" ->
+      editPatient(patientStruct, :lastname, 0) |>
+      patientAdminOption()
+    "3" ->
+      editPatient(patientStruct, :gender, 0) |>
+      patientAdminOption()
+    "4" ->
+      editPatient(patientStruct, :age, 1) |>
+      patientAdminOption()
+    "5" ->
+      editPatient(patientStruct, :address, 0) |>
+      patientAdminOption()
+    "6" ->
+      editPatient(patientStruct, :contact_num, 0) |>
+      patientAdminOption()
+    "7" ->
+      editPatient(patientStruct, :email, 0) |>
+      patientAdminOption()
+    "8" ->
+      editPatient(patientStruct, :password, 0) |>
+      patientAdminOption()
+    "9" -> :ok
+
+    "10" -> System.halt(0)
+
+     _  -> patientAdminOption(patientStruct)
+    end
+
+  end
+
+
+  def editPatient(patientStruct, field, type) do
+      # no checker
+      newVal = IO.gets("Enter new value: ") |> String.trim()
+
+
+      case Patients.update_patient(patientStruct, field, newVal) do
+        {:error, _} -> patientStruct
+        {:ok, newPatientStruct} -> newPatientStruct
+      end
   end
 
 end
