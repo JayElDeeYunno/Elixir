@@ -11,9 +11,14 @@ defmodule Medappointsys.Schemas.Doctor do
     field :age, :integer, default: 0
     field :address, :string, default: ""
     field :contact_num, :string, default: ""
-    field :specialization, :string, default: "Pediatrics"
+    field :specialization, :string, default: ""
+
 
     has_many :appointments, Medappointsys.Schemas.Appointment
+    many_to_many :timeranges, Medappointsys.Schemas.Timerange, join_through: "doctors_timeranges"
+
+    many_to_many :timeranges_unavailabilities, Medappointsys.Schemas.Timerange, join_through: "unavailabilities"
+    many_to_many :dates_unavailabilities, Medappointsys.Schemas.Date, join_through: "unavailabilities"
 
     timestamps()
   end
