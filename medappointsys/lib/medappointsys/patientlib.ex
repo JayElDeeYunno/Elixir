@@ -89,75 +89,35 @@ defmodule Medappointsys.Patientlib do
   end
 
   def viewInbox(patientStruct) do
-
-    uniqueDoctors = Appointments.confirmed_unique_doctors(patientStruct.id)
-
-    len = length(uniqueDoctors)
-    back = len + 1
-    halt = len + 2
-
-    IO.write("""
-    ╭───────────────────────────────────────────────────────╮
-    | #{patientStruct.firstname}'s Notification Box
-    |───────────────────────────────────────────────────────|
-    """)
-    Enum.with_index(uniqueDoctors)
-    |> Enum.each(fn {element, index} ->
-    IO.write("""
-    | (#{index + 1}) Dr. #{element.lastname}
-    """)
-    end)
-    IO.write("""
-    | (#{back}) Back
-    | (#{halt}) Exit
-    ╰───────────────────────────────────────────────────────╯
-    """)
-
-    # no checker
-    input = IO.gets("") |> String.trim() |> String.to_integer()
-
-    case input do
-      ^back -> :ok
-      ^halt -> System.halt(0)
-      _ ->  cond do
-              input > len ->  viewInbox(patientStruct)
-              input <= len ->
-
-              case Enum.fetch(uniqueDoctors, input - 1) do
-                :error -> viewInbox(patientStruct)
-
-                {_status, doctor} -> IO.write("""
-                ╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-                | #{patientStruct.firstname} #{patientStruct.lastname}'s Confirmed Appointments
-                |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
-                """)
-                Appointments.ordered_patient_appointments(doctor.id, patientStruct.id)
-                |> Enum.each(fn %Medappointsys.Schemas.Appointment{
-                  status: status,
-                  doctor: %Medappointsys.Schemas.Doctor{
-                    lastname: doctor_lastname,
-                  },
-                  date: %Medappointsys.Schemas.Date{
-                    date: appointment_date
-                  },
-                  timerange: %Medappointsys.Schemas.Timerange{
-                    start_time: start_time,
-                    end_time: end_time
-                  }
-                } ->
-                IO.write("""
-                | Your Appointment with Dr. #{doctor_lastname} scheduled on #{appointment_date} #{start_time}-#{end_time} is #{status}
-                |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
-                """)
-                end)
-                IO.write("""
-                ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-                """)
-                viewInbox(patientStruct)
-              end
-            end
+      IO.write("""
+      ╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+      | #{patientStruct.firstname} #{patientStruct.lastname}'s Notifications
+      |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
+      """)
+      Appointments.all_patient_appointments(patientStruct.id)
+      |> Enum.each(fn %Medappointsys.Schemas.Appointment{
+        status: status,
+        reason: reason,
+        doctor: %Medappointsys.Schemas.Doctor{
+          lastname: doctor_lastname,
+        },
+        date: %Medappointsys.Schemas.Date{
+          date: appointment_date
+        },
+        timerange: %Medappointsys.Schemas.Timerange{
+          start_time: start_time,
+          end_time: end_time
+        }
+      } ->
+      IO.write("""
+      | Your Appointment with Dr. #{doctor_lastname} scheduled on #{appointment_date} due to #{reason} at #{start_time}-#{end_time} is #{status}.
+      |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
+      """)
+      end)
+      IO.write("""
+      ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+      """)
     end
-  end
 
   def requestAppoint(patientStruct) do
 

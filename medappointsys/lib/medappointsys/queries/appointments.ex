@@ -6,11 +6,11 @@ defmodule Medappointsys.Queries.Appointments do
   alias Medappointsys.Schemas.Patient
 
   def list_appointments do
-    Repo.all(from m in Appointment, preload: [:patient, :doctor, :date, :timerange])
+    Repo.all(from a in Appointment, preload: [:patient, :doctor, :date, :timerange])
   end
 
   def ordered_list_appointments do
-    Repo.all(from m in Appointment, order_by: [desc: m.updated_at], preload: [:patient, :doctor, :date, :timerange])
+    Repo.all(from a in Appointment, order_by: [desc: a.updated_at], preload: [:patient, :doctor, :date, :timerange])
   end
 
   def get_appointment!(id), do: Repo.get!(Appointment, id)
@@ -94,6 +94,24 @@ defmodule Medappointsys.Queries.Appointments do
   end
 
   # Patient Related (pending, confimed, rescheduled, completed, cancelled)
+  def all_patient_appointments(doctor_id, patient_id) do
+    Repo.all(
+      from a in Appointment,
+      where: a.patient_id == ^patient_id and a.doctor_id == ^doctor_id,
+      order_by: [desc: a.updated_at],
+      preload: [:patient, :doctor, :date, :timerange]
+    )
+  end
+
+  def all_patient_appointments(patient_id) do
+    Repo.all(
+      from a in Appointment,
+      where: a.patient_id == ^patient_id,
+      order_by: [desc: a.updated_at],
+      preload: [:patient, :doctor, :date, :timerange]
+    )
+  end
+
   def confirmed_patient_appointments(doctor_id, patient_id) do
     Repo.all(
       from a in Appointment,
@@ -119,6 +137,19 @@ defmodule Medappointsys.Queries.Appointments do
       on: a.doctor_id == d.id,
       distinct: true,
       where: a.patient_id == ^patient_id and a.status == "Confirmed",
+      preload: [:doctor]
+    ) |> Enum.map(fn %Medappointsys.Schemas.Appointment{doctor: doctor} ->
+      doctor
+    end)
+  end
+
+  def unique_doctors(patient_id) do
+    Repo.all(
+      from a in Appointment,
+      join: d in Doctor,
+      on: a.doctor_id == d.id,
+      distinct: true,
+      where: a.patient_id == ^patient_id,
       preload: [:doctor]
     ) |> Enum.map(fn %Medappointsys.Schemas.Appointment{doctor: doctor} ->
       doctor
