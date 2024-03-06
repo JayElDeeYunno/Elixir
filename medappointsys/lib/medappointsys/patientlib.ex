@@ -95,16 +95,16 @@ defmodule Medappointsys.Patientlib do
       |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
       """)
       Appointments.all_patient_appointments(patientStruct.id)
-      |> Enum.each(fn %Medappointsys.Schemas.Appointment{
+      |> Enum.each(fn %Appointment{
         status: status,
         reason: reason,
-        doctor: %Medappointsys.Schemas.Doctor{
+        doctor: %Doctor{
           lastname: doctor_lastname,
         },
-        date: %Medappointsys.Schemas.Date{
+        date: %Date{
           date: appointment_date
         },
-        timerange: %Medappointsys.Schemas.Timerange{
+        timerange: %Timerange{
           start_time: start_time,
           end_time: end_time
         }
@@ -152,28 +152,9 @@ defmodule Medappointsys.Patientlib do
       ^back -> :ok
       ^halt -> System.halt(0)
       _ ->
-      cond do
-        input > len ->  requestAppoint(patientStruct)
-        input <= len ->
 
-        case Enum.fetch(doctorList, input - 1) do
-          :error -> requestAppoint(patientStruct)
-          {_status, doctor} ->
-
-
-          reason = IO.gets("") |> String.trim()
-          month = IO.gets("") |> String.trim()
-          day = IO.gets("") |> String.trim()
-
-
-          # THIS IS A NEW COMMENT HEHEHEHEHE
-
-        end
-      end
     end
 
-    # no checkers yet
-    reason = IO.gets("Indicate Appointment Reason: ") |> String.trim()
   end
 
   # end
