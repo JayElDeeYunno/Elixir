@@ -2,6 +2,7 @@ defmodule Medappointsys.Queries.Patients do
   import Ecto.Query
   alias MedAppointSys.Repo
   alias Medappointsys.Schemas.Patient
+  alias Medapppointsys.Main, as: Main
 
   def list_patients do
     Repo.all(Patient)
@@ -53,20 +54,23 @@ defmodule Medappointsys.Queries.Patients do
     end
   end
 
-  def change_patient(%Patient{} = patient, attrs \\ %{}) do
-    Patient.changeset(patient, attrs)
-  end
+  # def change_patient(%Patient{} = patient, attrs \\ %{}) do
+  #   Patient.changeset(patient, attrs)
+  # end
 
   # -------------------------------------------------------------------------------------------------------------#
 
-  @spec find_patient(any(), any(), any(), any(), any(), integer(), any(), any()) :: any()
   def find_patient(email, password, firstname, lastname, gender, age, address, contact_num) do
     Repo.get_by(Patient, email: email, password: password, firstname: firstname, lastname: lastname,
     gender: gender, age: age, address: address, contact_num: contact_num)
   end
 
-  def find_patient(email, password) do
-    Repo.get_by(Patient, email: email, password: password)
+  def find_patient(email) do
+    case Repo.get_by(Patient, email: email) do
+      nil -> nil
+      patient -> {patient, :patients}
+    end
   end
+
 
 end

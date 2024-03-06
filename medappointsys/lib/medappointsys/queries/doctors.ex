@@ -7,50 +7,67 @@ defmodule Medappointsys.Queries.Doctors do
     Repo.all(Doctor)
   end
 
-  # def list_doctors_by_id do
-  #   Repo.all(
-  #     from d in Doctor,
-  #     select: [d.id]
-  #   )
-  #   |> Enum.flat_map(fn x -> x end)
-  # end
-
   def get_doctor!(id), do: Repo.get!(Doctor, id)
 
   def create_doctor(attrs \\ %{}) do
-    %Doctor{}
+    case %Doctor{}
     |> Doctor.changeset(attrs)
-    |> Repo.insert()
+    |> Repo.insert() do
+      {:error, changeset} -> IO.puts("Register failed")
+                                {:error, changeset}
+
+      {:ok, createdDoctor} -> IO.puts("Register success")
+                                {:ok, createdDoctor}
+    end
   end
 
   def update_doctor(%Doctor{} = doctor, attrs) do
-    doctor
+    case doctor
     |> Doctor.changeset(attrs)
-    |> Repo.update()
+    |> Repo.update() do
+      {:error, changeset} -> IO.puts("Update failed")
+                              {:error, changeset}
+
+      {:ok, updatedDoctor} -> IO.puts("Update success")
+                                {:ok, updatedDoctor}
+    end
+  end
+
+  def update_doctor(%Doctor{} = doctor, field, value) do
+    case doctor
+    |> Doctor.changeset(%{field => value})
+    |> Repo.update() do
+      {:error, changeset} -> IO.puts("Update failed")
+                              {:error, changeset}
+
+      {:ok, updatedPatient} -> IO.puts("Update success")
+                                {:ok, updatedPatient}
+    end
   end
 
   def delete_doctor(%Doctor{} = doctor) do
-    Repo.delete(doctor)
-  end
+    case Repo.delete(doctor) do
+      {:error, changeset} -> IO.puts("Delete failed")
+                                {:error, changeset}
 
-  def change_doctor(%Doctor{} = doctor, attrs \\ %{}) do
-    Doctor.changeset(doctor, attrs)
+      {:ok, deletedDoctor} -> IO.puts("Delete success")
+                                  {:ok, deletedDoctor}
+    end
   end
 
   # -------------------------------------------------------------------------------------------------------------#
-
-  @spec find_doctor(any(), any(), any(), any(), any(), integer(), any(), any(), any()) :: any()
   def find_doctor(email, password, firstname, lastname, gender, age, address, contact_num, specialization) do
     Repo.get_by(Doctor, email: email, password: password, firstname: firstname, lastname: lastname,
     gender: gender, age: age, address: address, contact_num: contact_num, specialization: specialization)
   end
 
-  def find_doctor(email, password) do
-    Repo.get_by(Doctor, email: email, password: password)
+  def find_doctor(email) do
+
+    case Repo.get_by(Doctor, email: email) do
+      nil -> nil
+      doctor -> {doctor, :doctors}
+    end
   end
 
-  # -------------------------------------------------------------------------------------------------------------#
-
-  # def get_admin!(id), do: Repo.get!(Admin, id)
 
 end

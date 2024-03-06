@@ -5,40 +5,7 @@ defmodule Medappointsys.Adminlib do
   alias Medappointsys.Schemas.{Patient, Doctor, Timerange, Admin, Appointment, Date}
   alias Medappointsys.Repo
 
-  def adminPrompt(userType) do
-    IO.write("""
-    ╭─────────────────╮
-    | Admin Login     |
-    |─────────────────|
-    | (1) Login       |
-    | (2) [Back]      |
-    | (3) [Exit]      |
-    ╰─────────────────╯
-    """)
-    input = IO.gets("") |> String.trim()
-
-    case input do
-
-    "1" ->
-        case Main.login(userType) do
-          {:ok, adminStruct} ->
-            adminOptions(adminStruct)
-            adminPrompt(userType)
-
-          {:error, msg} ->
-            IO.puts(msg)
-            adminPrompt(userType)
-        end
-
-    "2" -> :ok
-
-    "3" -> System.halt(0)
-
-     _  -> adminPrompt(userType)
-    end
-  end
-
-  def adminOptions(adminStruct) do
+  def adminMenu(adminStruct) do
     IO.write("""
     ╭─────────────────────────────╮
     | Welcome, Admin #{adminStruct.lastname}
@@ -53,35 +20,35 @@ defmodule Medappointsys.Adminlib do
     ╰─────────────────────────────╯
     """)
 
-    input = IO.gets("") |> String.trim()
+    input = Main.inputCheck("Input", :integer)
 
     case input do
 
-    "1" ->
+    1 ->
       patientAdminOptionList(adminStruct)
-      adminOptions(adminStruct)
+      adminMenu(adminStruct)
 
-    "2" ->
+    2 ->
       viewPatientList()
-      adminOptions(adminStruct)
+      adminMenu(adminStruct)
 
-    "3" -> :ok
-      # viewDoctors(adminStruct)
-      # adminOptions(adminStruct)
+    3 ->
+      viewDoctorList()
+      adminMenu(adminStruct)
 
-    "4" -> :ok
-      # addDoctor(adminStruct)
-      # adminOptions(adminStruct)
+    4 ->
+      Main.register_doctor()
+      adminMenu(adminStruct)
 
-    "5" -> :ok
+    5 -> :ok
       # removeDoctor(adminStruct)
-      # adminOptions(adminStruct)
+      # adminMenu(adminStruct)
 
-    "6" -> :ok
+    6 -> :ok
 
-    "7" -> System.halt(0)
+    7 -> System.halt(0)
 
-     _  -> adminOptions(adminStruct)
+     _  -> adminMenu(adminStruct)
     end
   end
 
@@ -101,30 +68,30 @@ defmodule Medappointsys.Adminlib do
     | (8) [Exit]                    |
     ╰───────────────────────────────╯
     """)
-    input = IO.gets("") |> String.trim()
+    input = Main.inputCheck("Input", :integer)
 
     case input do
-    "1" ->
+    1 ->
       allAppointList(adminStruct)
       patientAdminOptionList(adminStruct)
-    "2" ->
+    2 ->
       activeAppointList(adminStruct)
       patientAdminOptionList(adminStruct)
-    "3" ->
+    3 ->
       pendingAppointList(adminStruct)
       patientAdminOptionList(adminStruct)
-    "4" ->
+    4 ->
       completedAppointList(adminStruct)
       patientAdminOptionList(adminStruct)
-    "5" ->
+    5 ->
       rescheduledAppointList(adminStruct)
       patientAdminOptionList(adminStruct)
-    "6" ->
+    6 ->
       cancelledAppointList(adminStruct)
       patientAdminOptionList(adminStruct)
-    "7" -> :ok
+    7 -> :ok
 
-    "8" -> System.halt(0)
+    8 -> System.halt(0)
 
      _  -> patientAdminOptionList(adminStruct)
     end
@@ -204,6 +171,8 @@ defmodule Medappointsys.Adminlib do
     displayAppointList(adminStruct, appointInfo, "Cancelled")
   end
 
+  #-----------------------------------------------PATIENT-------------------------------------------------#
+
   def viewPatientList() do
     patientList = Patients.list_patients()
 
@@ -229,8 +198,7 @@ defmodule Medappointsys.Adminlib do
     ╰───────────────────────────────────────────────────────╯
     """)
 
-        # no checker
-        input = IO.gets("") |> String.trim() |> String.to_integer()
+        input = Main.inputCheck("Input", :integer)
 
         case input do
           ^back -> :ok
@@ -241,14 +209,11 @@ defmodule Medappointsys.Adminlib do
              input <= len -> patient = Enum.fetch(patientList, input - 1)
 
              patientAdminOption(elem(patient, 1))
+             viewPatientList()
             end
 
         end
   end
-
-  # def hide(pass) do
-  #   String.replace(pass, ~r/./, "*")
-  # end
 
   def patientAdminOption(patientStruct) do
     IO.write("""
@@ -277,36 +242,44 @@ defmodule Medappointsys.Adminlib do
     |───────────────────────────────────────────────────────|
     """)
 
-    input = IO.gets("") |> String.trim()
+    input = Main.inputCheck("Input", :integer)
 
     case input do
-    "1" ->
-      editPatient(patientStruct, :firstname, 0) |>
+    1 ->
+      Main.inputCheck("Input New FirstName", :alpha) |>
+      editPatient(patientStruct, :firstname) |>
       patientAdminOption()
-    "2" ->
-      editPatient(patientStruct, :lastname, 0) |>
+    2 ->
+      Main.inputCheck("Input New LastName", :alpha) |>
+      editPatient(patientStruct, :lastname) |>
       patientAdminOption()
-    "3" ->
-      editPatient(patientStruct, :gender, 0) |>
+    3 ->
+      Main.inputCheck("Input New Gender", :alpha) |>
+      editPatient(patientStruct, :gender) |>
       patientAdminOption()
-    "4" ->
-      editPatient(patientStruct, :age, 1) |>
+    4 ->
+      Main.inputCheck("Input New Age", :integer) |>
+      editPatient(patientStruct, :age) |>
       patientAdminOption()
-    "5" ->
-      editPatient(patientStruct, :address, 0) |>
+    5 ->
+      Main.inputCheck("Input New Address", :alphanum) |>
+      editPatient(patientStruct, :address) |>
       patientAdminOption()
-    "6" ->
-      editPatient(patientStruct, :contact_num, 0) |>
+    6 ->
+      Main.inputCheck("Input New ContactNum", :integer) |>
+      editPatient(patientStruct, :contact_num) |>
       patientAdminOption()
-    "7" ->
-      editPatient(patientStruct, :email, 0) |>
+    7 ->
+      Main.inputCheck("Input New Email", :email) |>
+      editPatient(patientStruct, :email) |>
       patientAdminOption()
-    "8" ->
-      editPatient(patientStruct, :password, 0) |>
+    8 ->
+      Main.inputCheck("Input New Password", :string) |>
+      editPatient(patientStruct, :password) |>
       patientAdminOption()
-    "9" -> :ok
+    9 -> :ok
 
-    "10" -> System.halt(0)
+    10 -> System.halt(0)
 
      _  -> patientAdminOption(patientStruct)
     end
@@ -314,20 +287,141 @@ defmodule Medappointsys.Adminlib do
   end
 
 
-  def editPatient(patientStruct, field, type) do
-    # no checker
-    newInput = IO.gets("Enter new value: ")
-
-    newVal =
-      case type do
-        0 -> String.trim(newInput)
-        1 -> String.trim(newInput) |> String.to_integer
-        _ -> newInput
-      end
-
+  def editPatient(newVal, patientStruct, field) do
     case Patients.update_patient(patientStruct, field, newVal) do
       {:error, _} -> patientStruct
       {:ok, newPatientStruct} -> newPatientStruct
+    end
+  end
+
+  #-----------------------------------------------DOCTOR-------------------------------------------------#
+
+  def viewDoctorList() do
+    doctorList = Doctors.list_doctors()
+
+    len = length(doctorList)
+    back = len + 1
+    halt = len + 2
+
+    IO.write("""
+    ╭───────────────────────────────────────────────────────╮
+    | Full Doctor List
+    |───────────────────────────────────────────────────────|
+    """)
+    Enum.with_index(doctorList)
+    |> Enum.each(fn {element, index} ->
+    IO.write("""
+    | (#{index + 1}) #{element.firstname} #{element.lastname}, #{element.specialization}
+    """)
+    end)
+
+    IO.write("""
+    | (#{back}) Back
+    | (#{halt}) Exit
+    ╰───────────────────────────────────────────────────────╯
+    """)
+
+        input = Main.inputCheck("Input", :integer)
+
+        case input do
+          ^back -> :ok
+          ^halt -> System.halt(0)
+          _ ->
+            cond do
+             input > len -> viewDoctorList()
+             input <= len -> patient = Enum.fetch(doctorList, input - 1)
+
+             doctorAdminOption(elem(patient, 1))
+             viewDoctorList()
+            end
+
+        end
+  end
+
+  def doctorAdminOption(doctorStruct) do
+    IO.write("""
+    ╭───────────────────────────────────────────────────────╮
+    | Doctor Details
+    |───────────────────────────────────────────────────────|
+    | Firstname: #{doctorStruct.firstname}
+    | Lastname:  #{doctorStruct.lastname}
+    | Gender: #{doctorStruct.gender}
+    | Age: #{doctorStruct.age}
+    | Address: #{doctorStruct.address}
+    | ContactNum: #{doctorStruct.contact_num}
+    | Specialization: #{doctorStruct.specialization}
+    | Email: #{doctorStruct.email}
+    | Password: #{doctorStruct.password}
+    |=======================================================|
+    | (1) Edit FirstName
+    | (2) Edit LastName
+    | (3) Edit Gender
+    | (4) Edit Age
+    | (5) Edit Address
+    | (6) Edit ContactNum
+    | (7) Edit Specialization
+    | (8) Edit Email
+    | (9) Edit Password
+    | (10) Back
+    | (11) Exit
+    |───────────────────────────────────────────────────────|
+    """)
+
+    input = Main.inputCheck("Input", :integer)
+
+    case input do
+    1 ->
+      Main.inputCheck("Input New FirstName", :alpha) |>
+      editDoctor(doctorStruct, :firstname) |>
+      doctorAdminOption()
+    2 ->
+      Main.inputCheck("Input New LastName", :alpha) |>
+      editDoctor(doctorStruct, :lastname) |>
+      doctorAdminOption()
+    3 ->
+      Main.inputCheck("Input New Gender", :alpha) |>
+      editDoctor(doctorStruct, :gender) |>
+      doctorAdminOption()
+    4 ->
+      Main.inputCheck("Input New Age", :integer) |>
+      editDoctor(doctorStruct, :age) |>
+      doctorAdminOption()
+    5 ->
+      Main.inputCheck("Input New Address", :alphanum) |>
+      editDoctor(doctorStruct, :address) |>
+      doctorAdminOption()
+    6 ->
+      Main.inputCheck("Input New ContactNum", :integer) |>
+      editDoctor(doctorStruct, :contact_num) |>
+      doctorAdminOption()
+
+    7 ->
+      Main.inputCheck("Input New Specialization", :integer) |>
+      editDoctor(doctorStruct, :contact_num) |>
+      doctorAdminOption()
+
+    8 ->
+      Main.inputCheck("Input New Email", :email) |>
+      editDoctor(doctorStruct, :email) |>
+      doctorAdminOption()
+    9 ->
+      Main.inputCheck("Input New Password", :string) |>
+      editDoctor(doctorStruct, :password) |>
+      doctorAdminOption()
+
+    10 -> :ok
+
+    11 -> System.halt(0)
+
+     _  -> doctorAdminOption(doctorStruct)
+    end
+
+  end
+
+  def editDoctor(newVal, doctorStruct, field) do
+    case Doctors.update_doctor(doctorStruct, field, newVal) do
+      {:error, _} -> doctorStruct
+      {:ok, newDoctorStruct} -> newDoctorStruct
     end
   end
 

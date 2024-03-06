@@ -6,5 +6,7 @@ defmodule Medappointsys.Schemas.Admin do
     field :password, :string, default: "123"
     field :firstname, :string, default: ""
     field :lastname, :string, default: ""
+
+    timestamps()
   end
 end

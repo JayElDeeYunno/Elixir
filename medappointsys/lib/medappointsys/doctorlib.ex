@@ -1,27 +1,55 @@
 defmodule Medappointsys.Doctorlib do
-  import Medappointsys.Main
-  def doctorPrompt() do
-    IO.puts("""
-    ╭─────────────────╮
-    | Doctor Login    |
-    |─────────────────|
-    | (1) Login       |
-    | (2) [Back]      |
-    | (3) [Exit]      |
-    ╰─────────────────╯
+  alias Medappointsys.Main
+
+  def doctorMenu(doctorStruct) do
+
+    IO.write("""
+    ╭───────────────────────────────╮
+    | Welcome, Dr. #{doctorStruct.lastname}
+    |───────────────────────────────|
+    | (1) View Appointment Requests |
+    | (2) View Reschedule Requests  |
+    | (3) View Current Appointments |
+    | (4) View All Appointments     |
+    | (5) View Patients             |
+    | (6) Set Unavailability        |
+    | (7) [Logout]                  |
+    | (8) [Exit]                    |
+    ╰───────────────────────────────╯
     """)
-    input = IO.gets("") |> String.trim()
+    input = Main.inputCheck("Input", :integer)
 
     case input do
 
-    "1" ->
-      doctorPrompt()
+    1 ->
 
-    "2" -> :ok
+      doctorMenu(doctorStruct)
 
-    "3" -> System.halt(0)
+    2 ->
 
-     _  -> doctorPrompt()
+      doctorMenu(doctorStruct)
+
+    3 ->
+
+      doctorMenu(doctorStruct)
+
+    4 ->
+
+      doctorMenu(doctorStruct)
+
+    5 ->
+
+      doctorMenu(doctorStruct)
+
+    6 ->
+
+      doctorMenu(doctorStruct)
+
+    7 -> :ok
+
+    8 -> System.halt(0)
+
+     _  -> doctorMenu(doctorStruct)
     end
   end
 end

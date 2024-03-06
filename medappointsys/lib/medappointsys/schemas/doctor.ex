@@ -25,9 +25,9 @@ defmodule Medappointsys.Schemas.Doctor do
 
   def changeset(struct, params) do
     struct
-    |> cast(params, [:email, :password, :firstname, :lastname, :gender, :age, :address, :contact_num])
-    |> validate_required([:email])
-    |> validate_length(:email, min: 2)
+    |> cast(params, [:email, :password, :firstname, :lastname, :gender, :age, :address, :contact_num, :specialization])
+    |> validate_required([:email, :password, :firstname, :lastname, :gender, :age, :address, :contact_num])
+    |> validate_length(:password, min: 3)
   end
 
 

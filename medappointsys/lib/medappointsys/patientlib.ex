@@ -1,46 +1,10 @@
 defmodule Medappointsys.Patientlib do
-  alias Medappointsys.Main, as: Main
-  alias Medappointsys.Queries.Appointments, as: Appointments
-  alias Medappointsys.Queries.Doctors, as: Doctors
+  alias Medappointsys.Main
+  alias Medappointsys.Queries.Appointments
+  alias Medappointsys.Queries.Doctors
   alias Medappointsys.Schemas.{Patient, Doctor, Timerange, Admin, Appointment, Date}
 
-  def patientPrompt(userType) do
-    IO.write("""
-    ╭─────────────────╮
-    | Patient Login   |
-    |─────────────────|
-    | (1) Login       |
-    | (2) Register    |
-    | (3) [Back]      |
-    | (4) [Exit]      |
-    ╰─────────────────╯
-    """)
-    input = IO.gets("") |> String.trim()
-
-    case input do
-    "1" ->
-      case Main.login(userType) do
-        {:ok, patientStruct} ->
-          patientOptions(patientStruct)
-          patientPrompt(userType)
-
-        {:error, msg} ->
-          IO.puts(msg)
-          patientPrompt(userType)
-      end
-    "2" ->
-      Main.register(userType)
-      patientPrompt(userType)
-
-    "3" -> :ok
-
-    "4" -> System.halt(0)
-
-     _  -> patientPrompt(userType)
-    end
-  end
-
-  def patientOptions(patientStruct) do
+  def patientMenu(patientStruct) do
 
     IO.write("""
     ╭─────────────────────────────╮
@@ -55,35 +19,35 @@ defmodule Medappointsys.Patientlib do
     | (7) [Exit]                  |
     ╰─────────────────────────────╯
     """)
-    input = IO.gets("") |> String.trim()
+    input = Main.inputCheck("Input", :integer)
 
     case input do
 
-    "1" ->
+    1 ->
       viewInbox(patientStruct)
-      patientOptions(patientStruct)
+      patientMenu(patientStruct)
 
-    "2" ->
+    2 ->
       requestAppoint(patientStruct)
-      patientOptions(patientStruct)
+      patientMenu(patientStruct)
 
-    "3" ->
+    3 ->
       reschedAppoint(patientStruct)
-      patientOptions(patientStruct)
+      patientMenu(patientStruct)
 
-    "4" ->
+    4 ->
       cancelAppoint(patientStruct)
-      patientOptions(patientStruct)
+      patientMenu(patientStruct)
 
-    "5" ->
+    5 ->
       viewAppoint(patientStruct)
-      patientOptions(patientStruct)
+      patientMenu(patientStruct)
 
-    "6" -> :ok
+    6 -> :ok
 
-    "7" -> System.halt(0)
+    7 -> System.halt(0)
 
-     _  -> patientOptions(patientStruct)
+     _  -> patientMenu(patientStruct)
     end
   end
 
@@ -120,11 +84,10 @@ defmodule Medappointsys.Patientlib do
 
   def requestAppoint(patientStruct) do
 
-    doctorList =  Doctors.list_doctors()
+    doctorList = Doctors.list_doctors()
 
     len = length(doctorList)
     back = len + 1
-    halt = len + 2
 
     IO.write("""
     ╭───────────────────────────────────────────────────────╮
@@ -140,19 +103,11 @@ defmodule Medappointsys.Patientlib do
 
     IO.write("""
     | (#{back}) Back
-    | (#{halt}) Exit
     ╰───────────────────────────────────────────────────────╯
     """)
 
-    # no checker
-    input = IO.gets("") |> String.trim() |> String.to_integer()
+    input = Main.inputCheck("Input", :integer)
 
-    case input do
-      ^back -> :ok
-      ^halt -> System.halt(0)
-      _ ->
-
-    end
 
   end
 
@@ -182,32 +137,32 @@ defmodule Medappointsys.Patientlib do
     | (8) [Exit]                    |
     ╰───────────────────────────────╯
     """)
-    input = IO.gets("") |> String.trim()
+    input = Main.inputCheck("Input", :integer)
 
     case input do
-    "1" ->
+    1 ->
       allAppoint(patientStruct)
       viewAppoint(patientStruct)
-    "2" ->
+    2 ->
       activeAppoint(patientStruct)
       viewAppoint(patientStruct)
-    "3" ->
+    3 ->
       pendingAppoint(patientStruct)
       viewAppoint(patientStruct)
-    "4" ->
+    4 ->
       completedAppoint(patientStruct)
       viewAppoint(patientStruct)
-    "5" ->
+    5 ->
       rescheduledAppoint(patientStruct)
       viewAppoint(patientStruct)
-    "6" ->
+    6 ->
       cancelledAppoint(patientStruct)
       viewAppoint(patientStruct)
-    "7" -> :ok
+    7 -> :ok
 
-    "8" -> System.halt(0)
+    8 -> System.halt(0)
 
-     _  -> patientOptions(patientStruct)
+     _  -> patientMenu(patientStruct)
     end
   end
 
