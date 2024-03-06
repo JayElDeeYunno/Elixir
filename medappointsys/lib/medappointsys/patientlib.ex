@@ -4,7 +4,6 @@ defmodule Medappointsys.Patientlib do
   alias Medappointsys.Queries.Doctors, as: Doctors
   alias Medappointsys.Schemas.{Patient, Doctor, Timerange, Admin, Appointment, Date}
 
-
   def patientPrompt(userType) do
     IO.write("""
     ╭─────────────────╮
