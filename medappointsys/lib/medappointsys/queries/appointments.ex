@@ -6,11 +6,16 @@ defmodule Medappointsys.Queries.Appointments do
   alias Medappointsys.Schemas.Patient
 
   def list_appointments do
-    Repo.all(from a in Appointment, preload: [:patient, :doctor, :date, :timerange])
+    Repo.all(from a in Appointment, order_by: [desc: a.updated_at], preload: [:patient, :doctor, :date, :timerange])
   end
 
-  def ordered_list_appointments do
-    Repo.all(from a in Appointment, order_by: [desc: a.updated_at], preload: [:patient, :doctor, :date, :timerange])
+  def list_appointments(filter) do
+    Repo.all(
+      from a in Appointment,
+      where: a.status == ^filter,
+      order_by: [desc: a.updated_at],
+      preload: [:patient, :doctor, :date, :timerange]
+    )
   end
 
   def get_appointment!(id), do: Repo.get!(Appointment, id)
@@ -94,7 +99,8 @@ defmodule Medappointsys.Queries.Appointments do
   end
 
   # Patient Related (pending, confimed, rescheduled, completed, cancelled)
-  def all_patient_appointments(doctor_id, patient_id) do
+
+  def get_patient_appointments(doctor_id, patient_id) do
     Repo.all(
       from a in Appointment,
       where: a.patient_id == ^patient_id and a.doctor_id == ^doctor_id,
@@ -103,7 +109,7 @@ defmodule Medappointsys.Queries.Appointments do
     )
   end
 
-  def all_patient_appointments(patient_id) do
+  def get_patient_appointments(patient_id) do
     Repo.all(
       from a in Appointment,
       where: a.patient_id == ^patient_id,
@@ -112,23 +118,26 @@ defmodule Medappointsys.Queries.Appointments do
     )
   end
 
-  def confirmed_patient_appointments(doctor_id, patient_id) do
+  def filter_patient_appointments(doctor_id, patient_id, filter) do
     Repo.all(
       from a in Appointment,
-      where: a.patient_id == ^patient_id and a.status == "Confirmed" and a.doctor_id == ^doctor_id,
+      where: a.patient_id == ^patient_id and a.doctor_id == ^doctor_id and a.status == ^filter,
       order_by: [desc: a.updated_at],
       preload: [:patient, :doctor, :date, :timerange]
     )
   end
 
-  def confirmed_patient_appointments(patient_id) do
+
+  def filter_patient_appointments(patient_id, filter) do
     Repo.all(
       from a in Appointment,
-      where: a.patient_id == ^patient_id and a.status == "Confirmed",
+      where: a.patient_id == ^patient_id and a.status == ^filter,
       order_by: [desc: a.updated_at],
       preload: [:patient, :doctor, :date, :timerange]
     )
   end
+
+
 
   def confirmed_unique_doctors(patient_id) do
     Repo.all(
@@ -154,78 +163,6 @@ defmodule Medappointsys.Queries.Appointments do
     ) |> Enum.map(fn %Medappointsys.Schemas.Appointment{doctor: doctor} ->
       doctor
     end)
-  end
-
-  def cancelled_patient_appointments(doctor_id, patient_id) do
-    Repo.all(
-      from a in Appointment,
-      where: a.patient_id == ^patient_id and a.status == "Cancelled" and a.doctor_id == ^doctor_id,
-      order_by: [desc: a.updated_at],
-      preload: [:patient, :doctor, :date, :timerange]
-    )
-  end
-
-  def cancelled_patient_appointments(patient_id) do
-    Repo.all(
-      from a in Appointment,
-      where: a.patient_id == ^patient_id and a.status == "Cancelled",
-      order_by: [desc: a.updated_at],
-      preload: [:patient, :doctor, :date, :timerange]
-    )
-  end
-
-  def rescheduled_patient_appointments(doctor_id, patient_id) do
-    Repo.all(
-      from a in Appointment,
-      where: a.patient_id == ^patient_id and a.status == "Rescheduled" and a.doctor_id == ^doctor_id,
-      order_by: [desc: a.updated_at],
-      preload: [:patient, :doctor, :date, :timerange]
-    )
-  end
-
-  def rescheduled_patient_appointments(patient_id) do
-    Repo.all(
-      from a in Appointment,
-      where: a.patient_id == ^patient_id and a.status == "Rescheduled",
-      order_by: [desc: a.updated_at],
-      preload: [:patient, :doctor, :date, :timerange]
-    )
-  end
-
-  def pending_patient_appointments(doctor_id, patient_id) do
-    Repo.all(
-      from a in Appointment,
-      where: a.patient_id == ^patient_id and a.status == "Pending" and a.doctor_id == ^doctor_id,
-      order_by: [desc: a.updated_at],
-      preload: [:patient, :doctor, :date, :timerange]
-    )
-  end
-
-  def pending_patient_appointments(patient_id) do
-    Repo.all(
-      from a in Appointment,
-      where: a.patient_id == ^patient_id and a.status == "Pending",
-      order_by: [desc: a.updated_at],
-      preload: [:patient, :doctor, :date, :timerange]
-    )
-  end
-
-  def completed_patient_appointments(doctor_id, patient_id) do
-    Repo.all(
-      from a in Appointment,
-      where: a.patient_id == ^patient_id and a.status == "Completed" and a.doctor_id == ^doctor_id,
-      order_by: [desc: a.updated_at],
-      preload: [:patient, :doctor, :date, :timerange]
-    )
-  end
-
-  def completed_patient_appointments(patient_id) do
-    Repo.all(
-      from a in Appointment,
-      where: a.patient_id == ^patient_id and a.status == "Completed",
-      order_by: [desc: a.updated_at],
-      preload: [:patient, :doctor, :date, :timerange]
-    )
   end
 
   def request_appointment(%Patient{} = patient, attrs \\ %{}) do

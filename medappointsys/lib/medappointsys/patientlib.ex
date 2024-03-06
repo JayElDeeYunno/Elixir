@@ -94,7 +94,7 @@ defmodule Medappointsys.Patientlib do
       | #{patientStruct.firstname} #{patientStruct.lastname}'s Notifications
       |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
       """)
-      Appointments.all_patient_appointments(patientStruct.id)
+      Appointments.get_patient_appointments(patientStruct.id)
       |> Enum.each(fn %Appointment{
         status: status,
         reason: reason,
@@ -212,7 +212,7 @@ defmodule Medappointsys.Patientlib do
     end
   end
 
-  def displayPatientAppoint(patientStruct, appointInfo, type) do
+  def displayAppoint(patientStruct, appointInfo, type) do
     IO.write("""
     ╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
     | #{patientStruct.firstname} #{patientStruct.lastname}'s #{type} Appointments
@@ -245,40 +245,40 @@ defmodule Medappointsys.Patientlib do
   end
 
   def allAppoint(patientStruct) do
-    confirmed = Appointments.confirmed_patient_appointments(patientStruct.id)
-    pending = Appointments.pending_patient_appointments(patientStruct.id)
-    completed = Appointments.completed_patient_appointments(patientStruct.id)
-    resched = Appointments.rescheduled_patient_appointments(patientStruct.id)
-    cancelled = Appointments.cancelled_patient_appointments(patientStruct.id)
+    confirmed = Appointments.filter_patient_appointments(patientStruct.id, "Confirmed")
+    pending = Appointments.filter_patient_appointments(patientStruct.id, "Pending")
+    completed = Appointments.filter_patient_appointments(patientStruct.id, "Completed")
+    resched = Appointments.filter_patient_appointments(patientStruct.id, "Rescheduled")
+    cancelled = Appointments.filter_patient_appointments(patientStruct.id, "Cancelled")
 
     appointInfo = confirmed ++ pending ++ completed ++ resched ++ cancelled
 
-    displayPatientAppoint(patientStruct, appointInfo, "All")
+    displayAppoint(patientStruct, appointInfo, "All")
   end
 
   def activeAppoint(patientStruct) do
-    appointInfo = Appointments.confirmed_patient_appointments(patientStruct.id)
-    displayPatientAppoint(patientStruct, appointInfo, "Active")
+    appointInfo = Appointments.filter_patient_appointments(patientStruct.id, "Confirmed")
+    displayAppoint(patientStruct, appointInfo, "Active")
   end
 
   def pendingAppoint(patientStruct) do
-    appointInfo = Appointments.pending_patient_appointments(patientStruct.id)
-    displayPatientAppoint(patientStruct, appointInfo, "Pending")
+    appointInfo = Appointments.filter_patient_appointments(patientStruct.id, "Pending")
+    displayAppoint(patientStruct, appointInfo, "Pending")
   end
 
   def completedAppoint(patientStruct) do
-    appointInfo = Appointments.completed_patient_appointments(patientStruct.id)
-    displayPatientAppoint(patientStruct, appointInfo, "Completed")
+    appointInfo = Appointments.filter_patient_appointments(patientStruct.id, "Completed")
+    displayAppoint(patientStruct, appointInfo, "Completed")
   end
 
   def rescheduledAppoint(patientStruct) do
-    appointInfo = Appointments.rescheduled_patient_appointments(patientStruct.id)
-    displayPatientAppoint(patientStruct, appointInfo, "Rescheduled")
+    appointInfo = Appointments.filter_patient_appointments(patientStruct.id, "Rescheduled")
+    displayAppoint(patientStruct, appointInfo, "Rescheduled")
   end
 
   def cancelledAppoint(patientStruct) do
-    appointInfo = Appointments.cancelled_patient_appointments(patientStruct.id)
-    displayPatientAppoint(patientStruct, appointInfo, "Cancelled")
+    appointInfo = Appointments.filter_patient_appointments(patientStruct.id, "Cancelled")
+    displayAppoint(patientStruct, appointInfo, "Cancelled")
   end
 
 end

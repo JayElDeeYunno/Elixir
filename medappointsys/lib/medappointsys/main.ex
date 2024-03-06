@@ -32,7 +32,7 @@ defmodule Medappointsys.Main do
         userTypeLoop()
 
       "3" ->
-        # AdminLib.adminPrompt(3)
+        AdminLib.adminPrompt(3)
         userTypeLoop()
 
       "4" -> System.halt(0)
