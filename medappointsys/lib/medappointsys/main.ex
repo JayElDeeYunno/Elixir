@@ -21,19 +21,19 @@ defmodule Medappointsys.Main do
     userType = inputCheck("Input", :integer)
 
     case userType do
-      "1" ->
+      1 ->
         PatientLib.patientPrompt(1)
         userTypeLoop()
 
-      "2" ->
+      2 ->
         # DoctorLib.doctorPrompt(2)
         userTypeLoop()
 
-      "3" ->
+      3 ->
         AdminLib.adminPrompt(3)
         userTypeLoop()
 
-      "4" -> System.halt(0)
+      4 -> System.halt(0)
 
     end
 

@@ -10,19 +10,25 @@ defmodule Medappointsys.Queries.Patients do
   def get_patient!(id), do: Repo.get!(Patient, id)
 
   def create_patient(attrs \\ %{}) do
-    %Patient{}
+    case %Patient{}
     |> Patient.changeset(attrs)
-    |> Repo.insert()
+    |> Repo.insert() do
+      {:error, changeset} -> IO.puts("Register failed")
+                              {:error, changeset}
 
+      {:ok, createdPatient} -> IO.puts("Register sucess")
+                              {:ok, createdPatient}
+    end
   end
 
   def update_patient(%Patient{} = patient, attrs) do
     case patient
     |> Patient.changeset(attrs)
     |> Repo.update() do
-      {:error, changeset} -> {:error, changeset}
-
-      {:ok, _updatedPatient} -> IO.puts("Update success")
+      {:error, changeset} -> IO.puts("Update failed")
+                              {:error, changeset}
+      {:ok, updatedPatient} -> IO.puts("Update success")
+                                {:ok, updatedPatient}
     end
   end
 
@@ -39,7 +45,12 @@ defmodule Medappointsys.Queries.Patients do
   end
 
   def delete_patient(%Patient{} = patient) do
-    Repo.delete(patient)
+    case Repo.delete(patient) do
+      {:error, changeset} -> IO.puts("Delete failed")
+                              {:error, changeset}
+      {:ok, deletedPatient} -> IO.puts("Delete success")
+                              {:ok, deletedPatient}
+    end
   end
 
   def change_patient(%Patient{} = patient, attrs \\ %{}) do
