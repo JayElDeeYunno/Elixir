@@ -128,14 +128,23 @@ defmodule Medappointsys.Queries.Appointments do
     )
   end
 
-  def filter_patient_appointments(patient_id, filter) do
+  def filter_patient_appointments(patient_id, filters) do
     Repo.all(
       from a in Appointment,
-      where: a.patient_id == ^patient_id and a.status == ^filter,
+      where: a.patient_id == ^patient_id and a.status in ^filters,
       order_by: [desc: a.updated_at],
       preload: [:patient, :doctor, :date, :timerange]
     )
   end
+
+  def filter_date_appointments(patient_id, date_id, filters) do
+  Repo.all(
+    from a in Appointment,
+    where: a.patient_id == ^patient_id and a.date_id == ^date_id and a.status in ^filters,
+    order_by: [desc: a.updated_at],
+    preload: [:patient, :doctor, :date, :timerange]
+  )
+end
 
   def confirmed_unique_doctors(patient_id) do
     Repo.all(

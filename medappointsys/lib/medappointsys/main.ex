@@ -8,6 +8,7 @@ defmodule Medappointsys.Main do
   alias Medappointsys.Schemas.Patient, as: Patient
   alias Medappointsys.Schemas.Doctor, as: Doctor
   alias Medappointsys.Schemas.Admin, as: Admin
+  alias Date, as: ElixirDate
 
   def main, do: loginMenu()
 
@@ -132,16 +133,28 @@ defmodule Medappointsys.Main do
     end
   end
 
-  def inputCheck(prompt, :date) do
+  def inputCheck(prompt, :date, gap) do
     input = IO.gets(prompt <> ": ") |> String.trim()
       case Date.from_iso8601(input) do
-      {:ok, date} -> date
+      {:ok, date} ->
+        case isFutureDate?(date, gap) do
+          {:ok, futureDate} -> futureDate
+          :error -> inputCheck(prompt, :date, gap)
+        end
       {:error, _err} ->
         IO.puts("Invalid date. Please enter a date in the format YYYY-MM-DD.")
-        inputCheck(prompt, :date)
+        inputCheck(prompt, :date, gap)
       end
   end
 
+  def isFutureDate?(date, gap) do
+    result = ElixirDate.diff(ElixirDate.utc_today(), date) |> abs()
+    cond do
+      result >= gap -> {:ok, date}
+      result < gap -> IO.puts("Invalid date. Please enter a date #{gap} days from now.")
+      :error
+    end
+  end
     #-----------------------------------------------------------------------------------------------------------------#
 
   def register_doctor() do
