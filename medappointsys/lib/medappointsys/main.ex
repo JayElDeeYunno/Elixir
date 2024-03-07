@@ -13,13 +13,13 @@ defmodule Medappointsys.Main do
 
   def loginMenu() do
     IO.write("""
-    ╭─────────────────────────╮
-    | MedAppointSys           |
-    |-------------------------|
-    | (1) Login               |
-    | (2) Register (Patients) |
-    | (3) Exit                |
-    ╰─────────────────────────╯
+    ╭────────────────────────────╮
+    | Medical Appointment System |
+    |----------------------------|
+    | (1) Login                  |
+    | (2) Register (Patients)    |
+    | (3) Exit                   |
+    ╰────────────────────────────╯
     """)
     input = inputCheck("Input", :integer)
 
@@ -30,7 +30,7 @@ defmodule Medappointsys.Main do
           :error -> :ok
           {:ok, userStruct, :patients} -> PatientLib.patientMenu(userStruct)
 
-          # {:ok, userStruct, :doctors} -> DoctorLib.doctorMenu(userStruct)
+          {:ok, userStruct, :doctors} -> DoctorLib.doctorMenu(userStruct)
 
           {:ok, userStruct, :admins} -> AdminLib.adminMenu(userStruct)
         end
@@ -42,11 +42,14 @@ defmodule Medappointsys.Main do
       3 -> System.halt(0)
 
       #---------------------------------SHORTCUT------------------------------#
-      4 -> {%Patient{} = patient, :patients} = (Patients.find_patient("juandelacruz@example.com"))
+      4 -> {%Patient{} = patient, :patients} = (Patients.find_patient("jdelacruz@example.com"))
             PatientLib.patientMenu(patient)
             loginMenu()
       5 -> {%Admin{} = admin, :admins} = (Admins.find_admin("admin@example.com"))
             AdminLib.adminMenu(admin)
+            loginMenu()
+      6 -> {%Doctor{} = doctor, :doctors} = (Doctors.find_doctor("jrtoyoda@example.com"))
+            DoctorLib.doctorMenu(doctor)
             loginMenu()
       #-----------------------------------------------------------------------#
       _ -> loginMenu()
