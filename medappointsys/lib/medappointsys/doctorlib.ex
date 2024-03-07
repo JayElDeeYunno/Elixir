@@ -13,13 +13,13 @@ defmodule Medappointsys.Doctorlib do
     | (2) Upcoming Appointments       |
     |                                 |
     | (3) View Appointments           |
-    | (5) View Patients               |
+    | (4) View Patients               |
     |                                 |
-    | (6) Set Unavailability          |
-    | (7) Set Time Slots              |
+    | (5) Set Unavailability          |
+    | (6) Set Time Slots              |
     |                                 |
-    | (8) [Logout]                    |
-    | (9) [Exit]                      |
+    | (7) [Logout]                    |
+    | (8) [Exit]                      |
     ╰─────────────────────────────────╯
     """)
 
@@ -93,6 +93,7 @@ defmodule Medappointsys.Doctorlib do
     appointment_input = Main.inputCheck("Input", :integer)
   end
 
+  @spec viewActiveAppointments(atom() | %{:id => any(), optional(any()) => any()}) :: :ok
   def viewActiveAppointments(doctorStruct) do
     active_appointment_list =
       Appointments.filter_patient_appointments(doctorStruct.id, "Confirmed")
@@ -102,7 +103,7 @@ defmodule Medappointsys.Doctorlib do
 
     IO.write("""
     ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
-    | Active Appointments
+    | Upcoming Appointments
     |─────────────────────────────────────────────────────────────────────────────────────────────────|
     """)
 
@@ -124,63 +125,69 @@ defmodule Medappointsys.Doctorlib do
 
     appointment_input = Main.inputCheck("Input", :integer)
 
-    case Enum.fetch(active_appointment_list, appointment_input - 1) do
-      {:ok, selected_appointment} ->
-        IO.write("""
-        ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
-        | Selected Appointment
-        |─────────────────────────────────────────────────────────────────────────────────────────────────|
-        """)
+    case appointment_input do
+      ^back ->
+        :ok
 
-        IO.write("""
-        | Patient: #{selected_appointment.patient.firstname} #{selected_appointment.patient.lastname}
-        | Date: #{selected_appointment.date.date}, Time: #{selected_appointment.timerange.start_time}-#{selected_appointment.timerange.end_time},
-        | Reason: #{selected_appointment.reason}, Status: #{selected_appointment.status}
-        |─────────────────────────────────────────────────────────────────────────────────────────────────|
-        """)
-
-        IO.write("""
-        ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
-        """)
-
-        IO.write("""
-        ╭───────────────────────────────╮
-        | Action                        |
-        |===============================|
-        | (1) Mark as Completed         |
-        | (2) Cancel Appointment        |
-        | (3) [Back]                    |
-        ╰───────────────────────────────╯
-        """)
-
-        status_input = Main.inputCheck("Input", :integer)
-
-        case status_input do
-          1 ->
-            update_attrs = %{status: "Completed"}
-            Appointments.update_appointment(selected_appointment, update_attrs)
-
+      _ ->
+        case Enum.fetch(active_appointment_list, appointment_input - 1) do
+          {:ok, selected_appointment} ->
             IO.write("""
-              ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
-              | The selected appointment has been marked Completed.                                             |
-              ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
+            ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
+            | Selected Appointment
+            |─────────────────────────────────────────────────────────────────────────────────────────────────|
             """)
 
-          2 ->
-            update_attrs = %{status: "Cancelled"}
-            Appointments.update_appointment(selected_appointment, update_attrs)
-
             IO.write("""
-              ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
-              | The selected appointment has been cancelled. The patient will be notified.                      |
-              ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
+            | Patient: #{selected_appointment.patient.firstname} #{selected_appointment.patient.lastname}
+            | Date: #{selected_appointment.date.date}, Time: #{selected_appointment.timerange.start_time}-#{selected_appointment.timerange.end_time},
+            | Reason: #{selected_appointment.reason}, Status: #{selected_appointment.status}
+            |─────────────────────────────────────────────────────────────────────────────────────────────────|
             """)
 
-          3 ->
-            :ok
+            IO.write("""
+            ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
+            """)
 
-          _ ->
-            IO.puts("Invalid selection.")
+            IO.write("""
+            ╭───────────────────────────────╮
+            | Action                        |
+            |===============================|
+            | (1) Mark as Completed         |
+            | (2) Cancel Appointment        |
+            | (3) [Back]                    |
+            ╰───────────────────────────────╯
+            """)
+
+            status_input = Main.inputCheck("Input", :integer)
+
+            case status_input do
+              1 ->
+                update_attrs = %{status: "Completed"}
+                Appointments.update_appointment(selected_appointment, update_attrs)
+
+                IO.write("""
+                  ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
+                  | The selected appointment has been marked Completed.                                             |
+                  ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
+                """)
+
+              2 ->
+                update_attrs = %{status: "Cancelled"}
+                Appointments.update_appointment(selected_appointment, update_attrs)
+
+                IO.write("""
+                  ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
+                  | The selected appointment has been cancelled. The patient will be notified.                      |
+                  ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
+                """)
+
+              3 ->
+                :ok
+
+              _ ->
+                IO.puts("Invalid selection.")
+            end
         end
     end
   end
@@ -214,7 +221,7 @@ defmodule Medappointsys.Doctorlib do
         |─────────────────────────────────────────────────────────────────────────────────────────────────|
         """)
 
-         Enum.each(appointment_list, fn appointment ->
+        Enum.each(appointment_list, fn appointment ->
           IO.write("""
           | Patient: #{appointment.patient.firstname} #{appointment.patient.lastname}
           | Reason: #{appointment.reason}, Status: #{appointment.status}
@@ -238,7 +245,7 @@ defmodule Medappointsys.Doctorlib do
         |─────────────────────────────────────────────────────────────────────────────────────────────────|
         """)
 
-          Enum.each(active_appointment_list, fn appointment ->
+        Enum.each(active_appointment_list, fn appointment ->
           IO.write("""
           | Patient: #{appointment.patient.firstname} #{appointment.patient.lastname}
           | Reason: #{appointment.reason}, Status: #{appointment.status}
@@ -262,7 +269,7 @@ defmodule Medappointsys.Doctorlib do
         |─────────────────────────────────────────────────────────────────────────────────────────────────|
         """)
 
-          Enum.each(completed_appointment_list, fn appointment ->
+        Enum.each(completed_appointment_list, fn appointment ->
           IO.write("""
           | Patient: #{appointment.patient.firstname} #{appointment.patient.lastname}
           | Reason: #{appointment.reason}, Status: #{appointment.status}
@@ -286,7 +293,7 @@ defmodule Medappointsys.Doctorlib do
         |─────────────────────────────────────────────────────────────────────────────────────────────────|
         """)
 
-          Enum.each(reschedule_appointment_list, fn appointment ->
+        Enum.each(reschedule_appointment_list, fn appointment ->
           IO.write("""
           | Patient: #{appointment.patient.firstname} #{appointment.patient.lastname}
           | Reason: #{appointment.reason}, Status: #{appointment.status}
@@ -310,7 +317,7 @@ defmodule Medappointsys.Doctorlib do
         |─────────────────────────────────────────────────────────────────────────────────────────────────|
         """)
 
-          Enum.each(pending_appointment_list, fn appointment ->
+        Enum.each(pending_appointment_list, fn appointment ->
           IO.write("""
           | Patient: #{appointment.patient.firstname} #{appointment.patient.lastname}
           | Reason: #{appointment.reason}, Status: #{appointment.status}
@@ -334,7 +341,7 @@ defmodule Medappointsys.Doctorlib do
         |─────────────────────────────────────────────────────────────────────────────────────────────────|
         """)
 
-          Enum.each(cancelled_appointment_list, fn appointment ->
+        Enum.each(cancelled_appointment_list, fn appointment ->
           IO.write("""
           | Patient: #{appointment.patient.firstname} #{appointment.patient.lastname}
           | Reason: #{appointment.reason}, Status: #{appointment.status}
@@ -357,11 +364,10 @@ defmodule Medappointsys.Doctorlib do
   end
 
   def viewPatients(doctorStruct) do
-    patient_list = Doctors.get_patients(doctorStruct)
+    patient_list = Appointments.unique_patients(doctorStruct)
 
     len = length(patient_list)
     back = len + 1
-
 
     IO.write("""
     ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
@@ -399,6 +405,7 @@ defmodule Medappointsys.Doctorlib do
             | Selected Patient
             |─────────────────────────────────────────────────────────────────────────────────────────────────|
             """)
+
             IO.write("""
             | Name: #{selected_patient.firstname} #{selected_patient.lastname}
             | Gender: #{selected_patient.age}, Age: #{selected_patient.address}
@@ -424,32 +431,32 @@ defmodule Medappointsys.Doctorlib do
                 patient_appointments_list =
                   Appointments.get_patient_appointments(selected_patient.id)
 
-                IO.write("""
-                ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
-                | All Appointments
-                |─────────────────────────────────────────────────────────────────────────────────────────────────|
-                """)
-
-                Enum.each(patient_appointments_list, fn appointment ->
-                  IO.puts("""
-                  | Patient: #{appointment.patient.firstname} #{appointment.patient.lastname}
-                  | Reason: #{appointment.reason}, Status: #{appointment.status}
-                  | Date: #{appointment.date.date}, Time: #{appointment.timerange.start_time}-#{appointment.timerange.end_time}
+                  IO.write("""
+                  ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
+                  | All Appointments
                   |─────────────────────────────────────────────────────────────────────────────────────────────────|
                   """)
-                end)
 
-                IO.write("""
-                | (1) Back
-                ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
-                """)
-
+                  Enum.each(patient_appointments_list, fn appointment ->
+                    IO.puts("""
+                    | Patient: #{appointment.patient.firstname} #{appointment.patient.lastname}
+                    | Reason: #{appointment.reason}, Status: #{appointment.status}
+                    | Date: #{appointment.date.date}, Time: #{appointment.timerange.start_time}-#{appointment.timerange.end_time}
+                    |─────────────────────────────────────────────────────────────────────────────────────────────────|
+                    """)
+                  end)
+                  IO.write("""
+                  | (1) Back
+                  ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
+                  """)
+                  _input = Main.inputCheck("Input", :integer)
               2 ->
                 IO.write("""
                 ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
                 | Selected Patient
                 |─────────────────────────────────────────────────────────────────────────────────────────────────|
                 """)
+
                 IO.write("""
                 | Name: #{selected_patient.firstname} #{selected_patient.lastname}
                 | Gender: #{selected_patient.age}, Age: #{selected_patient.address}
@@ -457,6 +464,7 @@ defmodule Medappointsys.Doctorlib do
                 |─────────────────────────────────────────────────────────────────────────────────────────────────|
                 ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
                 """)
+
                 IO.write("""
                 ╭─────────────────────────────────────────────╮
                 | CONFIRM DELETION                            |
@@ -472,16 +480,23 @@ defmodule Medappointsys.Doctorlib do
 
                 case confirm_input do
                   1 ->
+                    Appointments.get_patient_appointments(selected_patient.id)
+                    |> Enum.each(&Appointments.delete_appointment/1)
                     Patients.delete_patient(selected_patient)
+
                     IO.write("""
                     ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
-                    | The selected patient has been deleted.                                                          |
+                    | The selected patient and their appointemnts has been deleted.                                   |
                     ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
                     """)
 
-                  2 -> :ok
-                  _ -> IO.puts("Invalid Selection")
+                  2 ->
+                    :ok
+
+                  _ ->
+                    IO.puts("Invalid Selection")
                 end
+
               _ ->
                 IO.puts("Invalid Selection")
             end
@@ -490,10 +505,8 @@ defmodule Medappointsys.Doctorlib do
   end
 
   def setUnavailability(doctorStruct) do
-
   end
 
   def setTimeranges(doctorStruct) do
-
   end
 end

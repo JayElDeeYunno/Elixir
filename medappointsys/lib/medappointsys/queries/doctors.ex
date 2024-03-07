@@ -80,6 +80,7 @@ defmodule Medappointsys.Queries.Doctors do
       from(a in Appointment,
         where: a.doctor_id == ^selected_doctor.id,
         join: p in Patient, on: a.patient_id == p.id,
+        distinct: p.id,
         select: p)
     Repo.all(query)
   end
@@ -91,5 +92,17 @@ defmodule Medappointsys.Queries.Doctors do
         join: t in Timerange, on: dt.timerange_id == t.id,
         select: t)
     Repo.all(query)
+  end
+
+  def add_doctor_timerange(attrs \\ %{}) do
+    case %DoctorTimerange{}
+    |> DoctorTimerange.changeset(attrs)
+    |> Repo.insert() do
+      {:error, changeset} -> IO.puts("Insert failed")
+                                {:error, changeset}
+
+      {:ok, createdDoctorTimeRange} -> IO.puts("Insert success")
+                                {:ok, createdDoctorTimeRange}
+    end
   end
 end

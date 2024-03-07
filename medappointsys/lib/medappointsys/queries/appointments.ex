@@ -98,7 +98,7 @@ defmodule Medappointsys.Queries.Appointments do
     end
   end
 
-  # --------------------------------- PATIENT--------------------------------------- #
+  # Patient Related (pending, confimed, rescheduled, completed, cancelled)
 
   def get_patient_appointments(doctor_id, patient_id) do
     Repo.all(
@@ -118,6 +118,7 @@ defmodule Medappointsys.Queries.Appointments do
     )
   end
 
+  @spec filter_patient_appointments(any(), any(), any()) :: any()
   def filter_patient_appointments(doctor_id, patient_id, filter) do
     Repo.all(
       from a in Appointment,
@@ -127,7 +128,6 @@ defmodule Medappointsys.Queries.Appointments do
     )
   end
 
-
   def filter_patient_appointments(patient_id, filter) do
     Repo.all(
       from a in Appointment,
@@ -136,8 +136,6 @@ defmodule Medappointsys.Queries.Appointments do
       preload: [:patient, :doctor, :date, :timerange]
     )
   end
-
-
 
   def confirmed_unique_doctors(patient_id) do
     Repo.all(
@@ -163,6 +161,16 @@ defmodule Medappointsys.Queries.Appointments do
     ) |> Enum.map(fn %Medappointsys.Schemas.Appointment{doctor: doctor} ->
       doctor
     end)
+  end
+
+  def unique_patients(selected_doctor) do
+    query =
+      from(a in Appointment,
+        where: a.doctor_id == ^selected_doctor.id,
+        join: p in Patient, on: a.patient_id == p.id,
+        distinct: p.id,
+        select: p)
+    Repo.all(query)
   end
 
   def request_appointment(%Patient{} = patient, attrs \\ %{}) do
