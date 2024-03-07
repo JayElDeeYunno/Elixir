@@ -49,9 +49,9 @@ defmodule Medappointsys.Main do
       5 -> {%Admin{} = admin, :admins} = (Admins.find_admin("admin@example.com"))
             AdminLib.adminMenu(admin)
             loginMenu()
-      6 -> {%Doctor{} = doctor, :doctors} = (Doctors.find_doctor("jrtoyoda@example.com"))
+      6 -> {%Doctor{} = doctor, :doctors} = (Doctors.find_doctor("antoniodizon@example.com"))
             DoctorLib.doctorMenu(doctor)
-            loginMenu()
+      loginMenu()
       #-----------------------------------------------------------------------#
       _ -> loginMenu()
     end
