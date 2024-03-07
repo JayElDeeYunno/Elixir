@@ -15,12 +15,17 @@ defmodule Medappointsys.Queries.Dates do
     |> Repo.insert()
   end
 
-  def date_exists?(date) do
-    from(d in Date, where: d.date == ^date)
-    |> Repo.exists?()
+  def update_date(%Date{} = date, attrs) do
+    date
+    |> Date.changeset(attrs)
+    |> Repo.update()
   end
 
-  def get_date_by_date(date) do
-    Repo.get_by(Date, date: date)
+  def delete_date(%Date{} = date) do
+    Repo.delete(date)
+  end
+
+  def change_date(%Date{} = date, attrs \\ %{}) do
+    Date.changeset(date, attrs)
   end
 end

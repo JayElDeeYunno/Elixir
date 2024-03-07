@@ -2,7 +2,6 @@ defmodule Medappointsys.Patientlib do
   alias Medappointsys.Main, as: Main
   alias Medappointsys.Queries.Appointments, as: Appointments
   alias Medappointsys.Queries.Doctors, as: Doctors
-  alias Medappointsys.Queries.Dates, as: Dates
   alias Medappointsys.Schemas.{Patient, Doctor, Timerange, Admin, Appointment, Date}
 
   def patientPrompt(userType) do
@@ -16,9 +15,9 @@ defmodule Medappointsys.Patientlib do
     | (4) [Exit]      |
     ╰─────────────────╯
     """)
-    doctor_input = IO.gets("") |> String.trim()
+    input = IO.gets("") |> String.trim()
 
-    case doctor_input do
+    case input do
     "1" ->
       case Main.login(userType) do
         {:ok, patientStruct} ->
@@ -37,7 +36,7 @@ defmodule Medappointsys.Patientlib do
 
     "4" -> System.halt(0)
 
-    _  -> patientPrompt(userType)
+     _  -> patientPrompt(userType)
     end
   end
 
@@ -56,9 +55,9 @@ defmodule Medappointsys.Patientlib do
     | (7) [Exit]                  |
     ╰─────────────────────────────╯
     """)
-    doctor_input = IO.gets("") |> String.trim()
+    input = IO.gets("") |> String.trim()
 
-    case doctor_input do
+    case input do
 
     "1" ->
       viewInbox(patientStruct)
@@ -84,7 +83,7 @@ defmodule Medappointsys.Patientlib do
 
     "7" -> System.halt(0)
 
-    _  -> patientOptions(patientStruct)
+     _  -> patientOptions(patientStruct)
     end
   end
 
@@ -119,79 +118,45 @@ defmodule Medappointsys.Patientlib do
       """)
     end
 
-    def requestAppoint(patientStruct) do
-      doctorList = Doctors.list_doctors()
+  def requestAppoint(patientStruct) do
 
-      len = length(doctorList)
-      back = len + 1
+    doctorList =  Doctors.list_doctors()
 
-      IO.write("""
-      ╭───────────────────────────────────────────────────────╮
-      | Select a Doctor for Appointment
-      |───────────────────────────────────────────────────────|
-      """)
-      Enum.with_index(doctorList)
-      |> Enum.each(fn {element, index} ->
-        IO.write("""
-        | (#{index + 1}) Dr. #{element.firstname} #{element.lastname}, #{element.specialization}
-        """)
-      end)
+    len = length(doctorList)
+    back = len + 1
+    halt = len + 2
 
-      IO.write("""
-      | (#{back}) Back
-      ╰───────────────────────────────────────────────────────╯
-      """)
+    IO.write("""
+    ╭───────────────────────────────────────────────────────╮
+    | Select a Doctor for Appointment
+    |───────────────────────────────────────────────────────|
+    """)
+    Enum.with_index(doctorList)
+    |> Enum.each(fn {element, index} ->
+    IO.write("""
+    | (#{index + 1}) Dr. #{element.firstname} #{element.lastname}, #{element.specialization}
+    """)
+    end)
 
-      doctor_input = Main.inputCheck("Input", :integer)
+    IO.write("""
+    | (#{back}) Back
+    | (#{halt}) Exit
+    ╰───────────────────────────────────────────────────────╯
+    """)
 
-      case doctor_input do
-        ^back -> :ok
-        _ ->
-          case Enum.fetch(doctorList, doctor_input - 1) do
-            {:ok, selected_doctor} ->
-              IO.puts("Selected Doctor: Dr. #{selected_doctor.firstname} #{selected_doctor.lastname}")
-              date_input = Main.inputCheck("Enter Date (YYYY-MM-DD)", :date)
+    # no checker
+    input = IO.gets("") |> String.trim() |> String.to_integer()
 
-              selected_date =
-                date_input
-                |> Dates.date_exists?
-                |> case do
-                  false -> Dates.create_date(%{date: date_input})
-                  true -> Dates.get_date_by_date(date_input)
-                end
+    case input do
+      ^back -> :ok
+      ^halt -> System.halt(0)
+      _ ->
 
-              doctor_timeranges = Doctors.get_timeranges(selected_doctor)
-
-              IO.puts("Available Time Ranges:")
-              Enum.with_index(doctor_timeranges, 1) |> Enum.each(fn {timerange, index} ->
-                IO.puts("(#{index}) #{timerange.start_time} - #{timerange.end_time}")
-              end)
-
-              timerange_input = Main.inputCheck("Select Time Range (Input the corresponding number)", :integer)
-
-              case Enum.fetch(doctor_timeranges, timerange_input - 1) do
-                {:ok, selected_timerange} ->
-                  IO.puts("Selected Time Range: #{selected_timerange.start_time} - #{selected_timerange.end_time}")
-
-                  reason = Main.inputCheck("Enter Reason", :string)
-
-                  # Create appointment logic here
-                  Appointments.create_appointment%{
-                    patient_id: patientStruct.id,
-                    doctor_id: selected_doctor.id,
-                    date_id: selected_date.id,
-                    timerange_id: selected_timerange.id,
-                    reason: reason,
-                    status: "Pending"
-                  }
-
-                _ -> IO.puts("Invalid time range selection.")
-              end
-            _ -> IO.puts("Invalid selection.")
-          end
-      end
     end
 
+  end
+
+  # end
 
   def reschedAppoint(patientStruct) do
 
@@ -217,9 +182,9 @@ defmodule Medappointsys.Patientlib do
     | (8) [Exit]                    |
     ╰───────────────────────────────╯
     """)
-    doctor_input = IO.gets("") |> String.trim()
+    input = IO.gets("") |> String.trim()
 
-    case doctor_input do
+    case input do
     "1" ->
       allAppoint(patientStruct)
       viewAppoint(patientStruct)
@@ -242,7 +207,7 @@ defmodule Medappointsys.Patientlib do
 
     "8" -> System.halt(0)
 
-    _  -> patientOptions(patientStruct)
+     _  -> patientOptions(patientStruct)
     end
   end
 
