@@ -140,7 +140,6 @@ defmodule Medappointsys.Main do
         IO.puts("Invalid date. Please enter a date in the format YYYY-MM-DD.")
         inputCheck(prompt, :date)
       end
-
   end
 
     #-----------------------------------------------------------------------------------------------------------------#
