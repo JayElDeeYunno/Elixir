@@ -2,8 +2,13 @@ defmodule Medappointsys.Main do
   alias Medappointsys.Patientlib, as: PatientLib
   alias Medappointsys.Doctorlib, as: DoctorLib
   alias Medappointsys.Adminlib, as: AdminLib
-  alias Medappointsys.Queries.{Patients, Doctors, Admins}
-  alias Medappointsys.Schemas.{Patient, Doctor, Admin}
+  alias Medappointsys.Queries.Patients, as: Patients
+  alias Medappointsys.Queries.Doctors, as: Doctors
+  alias Medappointsys.Queries.Admins, as: Admins
+  alias Medappointsys.Queries.Dates, as: Dates
+  alias Medappointsys.Schemas.Patient, as: Patient
+  alias Medappointsys.Schemas.Doctor, as: Doctor
+  alias Medappointsys.Schemas.Admin, as: Admin
   alias Date, as: ElixirDate
 
   def main, do: loginMenu()
@@ -45,7 +50,7 @@ defmodule Medappointsys.Main do
       5 -> {%Admin{} = admin, :admins} = (Admins.find_admin("admin@example.com"))
             AdminLib.adminMenu(admin)
             loginMenu()
-      6 -> {%Doctor{} = doctor, :doctors} = (Doctors.find_doctor("antoniodizon@example.com"))
+      6 -> {%Doctor{} = doctor, :doctors} = (Doctors.find_doctor("jrtoyoda@example.com"))
             DoctorLib.doctorMenu(doctor)
       loginMenu()
       #-----------------------------------------------------------------------#
@@ -137,6 +142,10 @@ defmodule Medappointsys.Main do
           {:ok, futureDate} -> futureDate
           :error -> inputCheck(prompt, :date, gap)
         end
+        case isFutureDate?(date, gap) do
+          {:ok, futureDate} -> futureDate
+          :error -> inputCheck(prompt, :date, gap)
+        end
       {:error, _err} ->
         IO.puts("Invalid date. Please enter a date in the format YYYY-MM-DD.")
         inputCheck(prompt, :date, gap)
@@ -152,7 +161,39 @@ defmodule Medappointsys.Main do
     end
   end
 
+  def isFutureDate?(date, gap) do
+    result = ElixirDate.diff(ElixirDate.utc_today(), date) |> abs()
+    cond do
+      result >= gap -> {:ok, date}
+      result < gap -> IO.puts("Invalid date. Please enter a date #{gap} days from now.")
+      :error
+    end
+  end
     #-----------------------------------------------------------------------------------------------------------------#
+
+  def isUnavailableDate(selected_doctor, unavailabilities) do
+    date_input = inputCheck("Enter Date (YYYY-MM-DD)", :date, 7)
+
+    selected_date =
+      date_input
+      |> Dates.date_exists?()
+      |> case do
+        false ->
+          {:ok, date_struct} = Dates.create_date(%{date: date_input})
+          date_struct
+
+        true ->
+          {:ok, date_struct} = {:ok, Dates.get_date_by_date(date_input)}
+          date_struct
+      end
+    case Enum.any?(unavailabilities, fn unavailability -> unavailability.date == selected_date end) do
+      true ->
+        IO.puts("The doctor is unavailable on this date. Please choose another date.")
+        isUnavailableDate(selected_doctor, unavailabilities)
+      false ->
+        selected_date
+    end
+  end
 
   def register_doctor() do
     IO.puts("Enter the following fields")

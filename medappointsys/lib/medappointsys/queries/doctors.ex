@@ -1,12 +1,19 @@
 defmodule Medappointsys.Queries.Doctors do
   import Ecto.Query
   alias MedAppointSys.Repo
-  alias Medappointsys.Schemas.{Doctor, Appointment, Patient, Date, DoctorTimerange, Timerange}
+  alias Medappointsys.Schemas.Doctor
+  alias Medappointsys.Schemas.Appointment
+  alias Medappointsys.Schemas.Patient
+  alias Medappointsys.Schemas.DoctorTimerange
+  alias Medappointsys.Schemas.Timerange
+  alias Medappointsys.Schemas.Unavailability
+  alias Medappointsys.Queries.Timeranges
 
   def list_doctors do
     Repo.all(Doctor)
   end
 
+  @spec get_doctor!(any()) :: any()
   def get_doctor!(id), do: Repo.get!(Doctor, id)
 
   @spec create_doctor() :: {:error, any()} | {:ok, any()}
@@ -89,6 +96,9 @@ defmodule Medappointsys.Queries.Doctors do
     Repo.all(query)
   end
 
+
+
+  @spec add_doctor_timerange() :: {:error, any()} | {:ok, any()}
   def add_doctor_timerange(attrs \\ %{}) do
     case %DoctorTimerange{}
     |> DoctorTimerange.changeset(attrs)
@@ -98,6 +108,67 @@ defmodule Medappointsys.Queries.Doctors do
 
       {:ok, createdDoctorTimeRange} -> IO.puts("Insert success")
                                 {:ok, createdDoctorTimeRange}
+    end
+  end
+
+  def delete_doctor_timerange(doctor_id, timerange_id) do
+    # Fetch the DoctorTimerange struct
+    struct = Repo.get_by(DoctorTimerange, doctor_id: doctor_id, timerange_id: timerange_id)
+
+    # Check if the struct exists
+    case struct do
+      nil ->
+        {:error, "Doctor timerange not found."}
+
+      _ ->
+        # Build a changeset for deletion
+        changeset = DoctorTimerange.changeset(struct, %{})
+
+        # Delete the doctor timerange using the changeset
+        case Repo.delete(changeset) do
+          {:ok, _deleted} ->
+            {:ok, "Timerange deleted successfully."}
+
+          {:error, _reason} ->
+            {:error, "Failed to delete timerange."}
+        end
+    end
+  end
+
+
+  @spec get_available_timeranges(any()) :: list()
+  def get_available_timeranges(current_timeranges) do
+    all_timeranges = Timeranges.list_timeranges()
+    current_timerange_ids = Enum.map(current_timeranges, & &1.id)
+
+    Enum.filter(all_timeranges, fn timerange ->
+      timerange.id not in current_timerange_ids
+    end)
+  end
+
+  def list_unavailabilities(doctor_id) do
+    query =
+      from(d in Unavailability,
+        where: d.doctor_id == ^doctor_id,
+        select: d,
+        preload: [:date]
+      )
+    Repo.all(query)
+  end
+
+  def create_unavailability(attrs \\ %{}) do
+    %Unavailability{}
+    |> Unavailability.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def delete_unavailability(%Unavailability{} = unavailability) do
+    case Repo.delete(unavailability) do
+      {:ok, _} ->
+        {:ok, "Unavailability deleted successfully"}
+
+      {:error, _} ->
+        {:error, "Failed to delete unavailability."}
     end
   end
 end
