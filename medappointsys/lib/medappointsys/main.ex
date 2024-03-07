@@ -2,12 +2,9 @@ defmodule Medappointsys.Main do
   alias Medappointsys.Patientlib, as: PatientLib
   alias Medappointsys.Doctorlib, as: DoctorLib
   alias Medappointsys.Adminlib, as: AdminLib
-  alias Medappointsys.Queries.Patients, as: Patients
-  alias Medappointsys.Queries.Doctors, as: Doctors
-  alias Medappointsys.Queries.Admins, as: Admins
-  alias Medappointsys.Schemas.Patient, as: Patient
-  alias Medappointsys.Schemas.Doctor, as: Doctor
-  alias Medappointsys.Schemas.Admin, as: Admin
+  alias Medappointsys.Queries.{Patients, Doctors, Admins}
+  alias Medappointsys.Schemas.{Patient, Doctor, Admin}
+  alias Date, as: ElixirDate
 
   def main, do: loginMenu()
 
@@ -48,6 +45,9 @@ defmodule Medappointsys.Main do
       5 -> {%Admin{} = admin, :admins} = (Admins.find_admin("admin@example.com"))
             AdminLib.adminMenu(admin)
             loginMenu()
+      6 -> {%Doctor{} = doctor, :doctors} = (Doctors.find_doctor("antoniodizon@example.com"))
+            DoctorLib.doctorMenu(doctor)
+      loginMenu()
       #-----------------------------------------------------------------------#
       _ -> loginMenu()
     end
@@ -132,7 +132,14 @@ defmodule Medappointsys.Main do
   def inputCheck(prompt, :date) do
     input = IO.gets(prompt <> ": ") |> String.trim()
       case Date.from_iso8601(input) do
-      {:ok, date} -> date
+      {:ok, date} ->
+        ElixirDate.diff(ElixirDate.utc_today(), date)
+        |>  abs()
+        |>  case do
+            14 -> date
+             _ -> IO.puts("Invalid date. Please enter a schedule 14 days from now.")
+                  inputCheck(prompt, :date)
+            end
       {:error, _err} ->
         IO.puts("Invalid date. Please enter a date in the format YYYY-MM-DD.")
         inputCheck(prompt, :date)

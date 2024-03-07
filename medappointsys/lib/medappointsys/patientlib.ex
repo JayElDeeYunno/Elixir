@@ -1,10 +1,8 @@
 defmodule Medappointsys.Patientlib do
   alias Medappointsys.Main
-  alias Medappointsys.Queries.Appointments
-  alias Medappointsys.Queries.Doctors
-  alias Medappointsys.Queries.Dates, as: Dates
+  alias Medappointsys.Queries.{Appointments, Doctors, Dates}
   alias Medappointsys.Schemas.{Patient, Doctor, Timerange, Admin, Appointment, Date}
-  #
+
   def patientMenu(patientStruct) do
     IO.write("""
     ╭─────────────────────────────╮

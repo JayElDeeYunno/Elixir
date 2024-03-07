@@ -71,7 +71,7 @@ defmodule Medappointsys.Queries.Patients do
     end
   end
 
-  def check_time(patient, date, timerange_id) do
+  def check_time(date, timerange_id, filters) do
     Repo.all(
       from a in Appointment,
       join: d in Doctor,
@@ -80,11 +80,11 @@ defmodule Medappointsys.Queries.Patients do
       on: a.date_id == dt.id,
       join: t in Timerange,
       on: a.timerange_id == t.id,
-      where: a.patient_id == ^patient.id and a.timerange_id == ^timerange_id and dt.date == ^date,
+      where: a.timerange_id == ^timerange_id and dt.date == ^date and a.status in ^filters,
       preload: [:doctor, :timerange, :date]
     ) |> case do
         [] -> {:ok, "The selected appointment period is free."}
-        _ -> {:error, "You already have an appointment at this period."}
+        _ -> {:error, "The selected appointment is unavailable."}
       end
   end
 
