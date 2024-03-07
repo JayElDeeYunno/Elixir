@@ -2,8 +2,11 @@ defmodule Medappointsys.Queries.Doctors do
   import Ecto.Query
   alias MedAppointSys.Repo
   alias Medappointsys.Schemas.Doctor
-  alias Medappointsys.Schemas.{Appointment, Patient, Date, DoctorTimerange, Timerange, Unavailability}
-
+  alias Medappointsys.Schemas.Appointment
+  alias Medappointsys.Schemas.Patient
+  alias Medappointsys.Schemas.Date
+  alias Medappointsys.Schemas.DoctorTimerange
+  alias Medappointsys.Schemas.Timerange
 
   def list_doctors do
     Repo.all(Doctor)
@@ -11,6 +14,7 @@ defmodule Medappointsys.Queries.Doctors do
 
   def get_doctor!(id), do: Repo.get!(Doctor, id)
 
+  @spec create_doctor() :: {:error, any()} | {:ok, any()}
   def create_doctor(attrs \\ %{}) do
     case %Doctor{}
     |> Doctor.changeset(attrs)
@@ -71,6 +75,15 @@ defmodule Medappointsys.Queries.Doctors do
     end
   end
 
+  def get_patients(selected_doctor) do
+    query =
+      from(a in Appointment,
+        where: a.doctor_id == ^selected_doctor.id,
+        join: p in Patient, on: a.patient_id == p.id,
+        select: p)
+    Repo.all(query)
+  end
+
   def get_timeranges(selected_doctor) do
     query =
       from(dt in DoctorTimerange,
@@ -78,31 +91,5 @@ defmodule Medappointsys.Queries.Doctors do
         join: t in Timerange, on: dt.timerange_id == t.id,
         select: t)
     Repo.all(query)
-  end
-
-  #----------------------------------------------------------------------------------------------------#
-  def add_doctor_timerange(attrs \\ %{}) do
-      case %DoctorTimerange{}
-      |> DoctorTimerange.changeset(attrs)
-      |> Repo.insert() do
-        {:error, changeset} -> IO.puts("Insert failed")
-                                  {:error, changeset}
-
-        {:ok, createdDoctorTimeRange} -> IO.puts("Insert success")
-                                  {:ok, createdDoctorTimeRange}
-      end
-    end
-
-
-  def add_unavailability(attrs \\ %{}) do
-    case %Unavailability{}
-    |> Unavailability.changeset(attrs)
-    |> Repo.insert() do
-      {:error, changeset} -> IO.puts("Insert failed")
-                                {:error, changeset}
-
-      {:ok, createdUnavailability} -> IO.puts("Insert success")
-                                {:ok, createdUnavailability}
-    end
   end
 end
