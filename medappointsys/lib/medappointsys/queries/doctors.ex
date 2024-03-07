@@ -2,6 +2,11 @@ defmodule Medappointsys.Queries.Doctors do
   import Ecto.Query
   alias MedAppointSys.Repo
   alias Medappointsys.Schemas.Doctor
+  alias Medappointsys.Schemas.Appointment
+  alias Medappointsys.Schemas.Patient
+  alias Medappointsys.Schemas.Date
+  alias Medappointsys.Schemas.DoctorTimerange
+  alias Medappointsys.Schemas.Timerange
 
   def list_doctors do
     Repo.all(Doctor)
@@ -49,8 +54,17 @@ defmodule Medappointsys.Queries.Doctors do
     Repo.get_by(Doctor, email: email, password: password)
   end
 
+  def get_timeranges(selected_doctor) do
+    query =
+      from(dt in Medappointsys.Schemas.DoctorTimerange,
+        where: dt.doctor_id == ^selected_doctor.id,
+        join: t in Medappointsys.Schemas.Timerange, on: dt.timerange_id == t.id,
+        select: t)
+    Repo.all(query)
+  end
+
+
   # -------------------------------------------------------------------------------------------------------------#
 
   # def get_admin!(id), do: Repo.get!(Admin, id)
-
 end
