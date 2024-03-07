@@ -1,10 +1,8 @@
 defmodule Medappointsys.Adminlib do
-  alias Medappointsys.Main, as: Main
-  alias Medappointsys.Patientlib
+  alias Medappointsys.Main
   alias Medappointsys.Queries.{Appointments, Patients, Doctors}
   alias Medappointsys.Schemas.{Patient, Doctor, Timerange, Admin, Appointment, Date}
-  alias Medappointsys.Repo
-  #
+
   def adminMenu(adminStruct) do
     IO.write("""
     ╭─────────────────────────────╮

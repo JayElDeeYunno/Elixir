@@ -39,7 +39,7 @@ defmodule Medappointsys.Main do
       3 -> System.halt(0)
 
       #---------------------------------SHORTCUT------------------------------#
-      4 -> {%Patient{} = patient, :patients} = (Patients.find_patient("jdelacruz@example.com"))
+      4 -> {%Patient{} = patient, :patients} = (Patients.find_patient("juandelacruz@example.com"))
             PatientLib.patientMenu(patient)
             loginMenu()
       5 -> {%Admin{} = admin, :admins} = (Admins.find_admin("admin@example.com"))
@@ -129,21 +129,27 @@ defmodule Medappointsys.Main do
     end
   end
 
-  def inputCheck(prompt, :date) do
+  def inputCheck(prompt, :date, gap) do
     input = IO.gets(prompt <> ": ") |> String.trim()
       case Date.from_iso8601(input) do
       {:ok, date} ->
-        ElixirDate.diff(ElixirDate.utc_today(), date)
-        |>  abs()
-        |>  case do
-            14 -> date
-             _ -> IO.puts("Invalid date. Please enter a schedule 14 days from now.")
-                  inputCheck(prompt, :date)
-            end
+        case isFutureDate?(date, gap) do
+          {:ok, futureDate} -> futureDate
+          :error -> inputCheck(prompt, :date, gap)
+        end
       {:error, _err} ->
         IO.puts("Invalid date. Please enter a date in the format YYYY-MM-DD.")
-        inputCheck(prompt, :date)
+        inputCheck(prompt, :date, gap)
       end
+  end
+
+  def isFutureDate?(date, gap) do
+    result = ElixirDate.diff(ElixirDate.utc_today(), date) |> abs()
+    cond do
+      result >= gap -> {:ok, date}
+      result < gap -> IO.puts("Invalid date. Please enter a date #{gap} days from now.")
+      :error
+    end
   end
 
     #-----------------------------------------------------------------------------------------------------------------#

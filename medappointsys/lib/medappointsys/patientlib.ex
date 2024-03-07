@@ -60,22 +60,9 @@ defmodule Medappointsys.Patientlib do
     """)
 
     Appointments.get_patient_appointments(patientStruct.id)
-    |> Enum.each(fn %Appointment{
-                      status: status,
-                      reason: reason,
-                      doctor: %Doctor{
-                        lastname: doctor_lastname
-                      },
-                      date: %Date{
-                        date: appointment_date
-                      },
-                      timerange: %Timerange{
-                        start_time: start_time,
-                        end_time: end_time
-                      }
-                    } ->
+    |> Enum.each(fn appointment ->
       IO.write("""
-      | Your Appointment with Dr. #{doctor_lastname} scheduled on #{appointment_date} due to #{reason} at #{start_time}-#{end_time} is #{status}.
+      | Your Appointment with Dr. #{appointment.doctor.lastname} scheduled on #{appointment.date.date} due to #{appointment.reason} at #{appointment.timerange.start_time}-#{appointment.timerange.end_time} is #{appointment.status}.
       |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
       """)
     end)
@@ -728,24 +715,9 @@ defmodule Medappointsys.Patientlib do
     |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
     """)
 
-    Enum.each(appointInfo, fn %Appointment{
-                                status: status,
-                                reason: reason,
-                                doctor: %Doctor{
-                                  firstname: doctor_firstname,
-                                  lastname: doctor_lastname,
-                                  specialization: specialization
-                                },
-                                date: %Date{
-                                  date: appointment_date
-                                },
-                                timerange: %Timerange{
-                                  start_time: start_time,
-                                  end_time: end_time
-                                }
-                              } ->
+    Enum.each(appointInfo, fn appointment ->
       IO.write("""
-      | Doctor: #{doctor_firstname} #{doctor_lastname}, Specialty: #{specialization}, Date: #{appointment_date}, Time: #{start_time}-#{end_time}, Reason: #{reason}, Status: #{status}
+      | Doctor: #{appointment.doctor.firstname} #{appointment.doctor.lastname}, Specialty: #{appointment.doctor.specialization}, Date: #{appointment.date.date}, Time: #{appointment.timerange.start_time}-#{appointment.timerange.end_time}, Reason: #{appointment.reason}, Status: #{appointment.status}
       |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
       """)
     end)

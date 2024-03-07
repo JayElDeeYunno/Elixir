@@ -4,7 +4,6 @@ defmodule MedAppointSys.Repo.Migrations.CreateUnavailability do
   def change do
     create table(:unavailabilities) do
       add :doctor_id, references(:doctors)
-      add :timerange_id, references(:timeranges)
       add :date_id, references(:dates)
     end
 
