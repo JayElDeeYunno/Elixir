@@ -28,4 +28,13 @@ defmodule Medappointsys.Queries.Dates do
   def change_date(%Date{} = date, attrs \\ %{}) do
     Date.changeset(date, attrs)
   end
+
+  def date_exists?(date) do
+    from(d in Date, where: d.date == ^date)
+    |> Repo.exists?()
+  end
+
+  def get_date_by_date(date) do
+    Repo.get_by(Date, date: date)
+  end
 end

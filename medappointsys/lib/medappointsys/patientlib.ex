@@ -2,6 +2,7 @@ defmodule Medappointsys.Patientlib do
   alias Medappointsys.Main
   alias Medappointsys.Queries.Appointments
   alias Medappointsys.Queries.Doctors
+  alias Medappointsys.Queries.Dates, as: Dates
   alias Medappointsys.Schemas.{Patient, Doctor, Timerange, Admin, Appointment, Date}
   #
   def patientMenu(patientStruct) do
@@ -83,9 +84,7 @@ defmodule Medappointsys.Patientlib do
     end
 
   def requestAppoint(patientStruct) do
-
     doctorList = Doctors.list_doctors()
-
     len = length(doctorList)
     back = len + 1
 
@@ -106,12 +105,59 @@ defmodule Medappointsys.Patientlib do
     ╰───────────────────────────────────────────────────────╯
     """)
 
-    input = Main.inputCheck("Input", :integer)
+    doctor_input = Main.inputCheck("Input", :integer)
 
+    case doctor_input do
+      ^back -> :ok
+      _ ->
+        case Enum.fetch(doctorList, doctor_input - 1) do
+          {:ok, selected_doctor} ->
+            IO.puts("Selected Doctor: Dr. #{selected_doctor.firstname} #{selected_doctor.lastname}")
+            date_input = Main.inputCheck("Enter Date (YYYY-MM-DD)", :date)
 
+            selected_date =
+              date_input
+              |> Dates.date_exists?()
+              |> case do
+                false ->
+                  {:ok, date_struct} = Dates.create_date(%{date: date_input})
+                  date_struct
+                true ->
+                  {:ok, date_struct} = { :ok, Dates.get_date_by_date(date_input)}
+                  date_struct
+              end
+
+            doctor_timeranges = Doctors.get_timeranges(selected_doctor)
+
+            IO.puts("Available Time Ranges:")
+            Enum.with_index(doctor_timeranges, 1) |> Enum.each(fn {timerange, index} ->
+              IO.puts("(#{index}) #{timerange.start_time} - #{timerange.end_time}")
+            end)
+
+            timerange_input = Main.inputCheck("Select Time Range (Input the corresponding number)", :integer)
+
+            case Enum.fetch(doctor_timeranges, timerange_input - 1) do
+              {:ok, selected_timerange} ->
+                IO.puts("Selected Time Range: #{selected_timerange.start_time} - #{selected_timerange.end_time}")
+
+                reason = Main.inputCheck("Enter Reason", :string)
+
+                Appointments.create_appointment%{
+                  patient_id: patientStruct.id,
+                  doctor_id: selected_doctor.id,
+                  date_id: selected_date.id,
+                  timerange_id: selected_timerange.id,
+                  reason: reason,
+                  status: "Pending"
+                }
+
+              _ -> IO.puts("Invalid time range selection.")
+            end
+          _ -> IO.puts("Invalid selection.")
+        end
+    end
   end
 
-  # end
 
   def reschedAppoint(patientStruct) do
 
