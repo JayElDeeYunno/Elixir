@@ -98,7 +98,7 @@ defmodule Medappointsys.Queries.Appointments do
     end
   end
 
-  # Patient Related (pending, confimed, rescheduled, completed, cancelled)
+  # --------------------------------- PATIENT--------------------------------------- #
 
   def get_patient_appointments(doctor_id, patient_id) do
     Repo.all(
