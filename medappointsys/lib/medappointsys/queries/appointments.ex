@@ -118,7 +118,15 @@ defmodule Medappointsys.Queries.Appointments do
     )
   end
 
-  @spec filter_patient_appointments(any(), any(), any()) :: any()
+  def get_doctor_appointments(doctor_id) do
+    Repo.all(
+      from a in Appointment,
+      where: a.doctor_id == ^doctor_id,
+      order_by: [desc: a.updated_at],
+      preload: [:patient, :doctor, :date, :timerange]
+    )
+  end
+
   def filter_patient_appointments(doctor_id, patient_id, filter) do
     Repo.all(
       from a in Appointment,
@@ -137,6 +145,16 @@ defmodule Medappointsys.Queries.Appointments do
     )
   end
 
+  def filter_doctor_appointments(doctor_id, filters) do
+    Repo.all(
+      from a in Appointment,
+      where: a.doctor_id == ^doctor_id and a.status in ^filters,
+      order_by: [desc: a.updated_at],
+      preload: [:patient, :doctor, :date, :timerange]
+    )
+  end
+
+  @spec filter_date_appointments(any(), any(), any()) :: any()
   def filter_date_appointments(patient_id, date_id, filters) do
   Repo.all(
     from a in Appointment,
@@ -144,8 +162,18 @@ defmodule Medappointsys.Queries.Appointments do
     order_by: [desc: a.updated_at],
     preload: [:patient, :doctor, :date, :timerange]
   )
-end
+  end
 
+  def filter_date_doctor_appointments(doctor_id, date_id, filters) do
+  Repo.all(
+    from a in Appointment,
+    where: a.doctor_id == ^doctor_id and a.date_id == ^date_id and a.status in ^filters,
+    order_by: [desc: a.updated_at],
+    preload: [:patient, :doctor, :date, :timerange]
+  )
+  end
+
+  @spec confirmed_unique_doctors(any()) :: list()
   def confirmed_unique_doctors(patient_id) do
     Repo.all(
       from a in Appointment,

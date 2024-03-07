@@ -64,8 +64,9 @@ defmodule Medappointsys.Doctorlib do
 
   def viewAppointmentRequests(doctorStruct) do
     appointment_request_list =
-      Appointments.filter_patient_appointments(doctorStruct.id, ["Pending", "Reschedule"])
+      Appointments.filter_doctor_appointments(doctorStruct.id, ["Pending", "Reschedule"])
 
+    IO.inspect(appointment_request_list)
     len = length(appointment_request_list)
     back = len + 1
 
@@ -157,7 +158,7 @@ defmodule Medappointsys.Doctorlib do
   @spec viewActiveAppointments(atom() | %{:id => any(), optional(any()) => any()}) :: :ok
   def viewActiveAppointments(doctorStruct) do
     active_appointment_list =
-      Appointments.filter_patient_appointments(doctorStruct.id, ["Confirmed"])
+      Appointments.filter_doctor_appointments(doctorStruct.id, ["Confirmed"])
 
     len = length(active_appointment_list)
     back = len + 1
@@ -274,7 +275,7 @@ defmodule Medappointsys.Doctorlib do
     case appointment_input do
       1 ->
         appointment_list =
-          Appointments.get_patient_appointments(doctorStruct.id)
+          Appointments.get_doctor_appointments(doctorStruct.id)
 
         len = length(appointment_list)
         back = len + 1
@@ -350,7 +351,7 @@ defmodule Medappointsys.Doctorlib do
 
       2 ->
         active_appointment_list =
-          Appointments.filter_patient_appointments(doctorStruct.id, "Confirmed")
+          Appointments.filter_doctor_appointments(doctorStruct.id, ["Confirmed"])
 
         IO.write("""
         ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
@@ -374,7 +375,7 @@ defmodule Medappointsys.Doctorlib do
 
       3 ->
         completed_appointment_list =
-          Appointments.filter_patient_appointments(doctorStruct.id, "Completed")
+          Appointments.filter_doctor_appointments(doctorStruct.id, ["Completed"])
 
         IO.write("""
         ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
@@ -398,7 +399,7 @@ defmodule Medappointsys.Doctorlib do
 
       4 ->
         reschedule_appointment_list =
-          Appointments.filter_patient_appointments(doctorStruct.id, "Confirmed")
+          Appointments.filter_doctor_appointments(doctorStruct.id, ["Reschedule"])
 
         IO.write("""
         ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
@@ -422,7 +423,7 @@ defmodule Medappointsys.Doctorlib do
 
       5 ->
         pending_appointment_list =
-          Appointments.filter_patient_appointments(doctorStruct.id, "Pending")
+          Appointments.filter_doctor_appointments(doctorStruct.id, ["Pending"])
 
         IO.write("""
         ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
@@ -446,7 +447,7 @@ defmodule Medappointsys.Doctorlib do
 
       6 ->
         cancelled_appointment_list =
-          Appointments.filter_patient_appointments(doctorStruct.id, "Cancelled")
+          Appointments.filter_doctor_appointments(doctorStruct.id, ["Cancelled"])
 
         IO.write("""
         ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮

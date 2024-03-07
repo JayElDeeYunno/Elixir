@@ -146,8 +146,6 @@ defmodule Medappointsys.Queries.Doctors do
     end)
   end
 
-
-
   def list_unavailabilities(doctor_id) do
     query =
       from(d in Unavailability,
