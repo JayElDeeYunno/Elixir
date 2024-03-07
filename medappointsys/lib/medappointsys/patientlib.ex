@@ -200,7 +200,7 @@ defmodule Medappointsys.Patientlib do
     ╭─────────────────────────────╮
     | Choose Reschedule Options
     |─────────────────────────────|
-    | (1) Active Appointments  |
+    | (1) Active Appointments     |
     | (2) Pending Appointments    |
     | (3) Back                    |
     ╰─────────────────────────────╯
