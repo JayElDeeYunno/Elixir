@@ -2,7 +2,7 @@ defmodule Medappointsys.Queries.Doctors do
   import Ecto.Query
   alias MedAppointSys.Repo
   alias Medappointsys.Schemas.Doctor
-
+  #
   def list_doctors do
     Repo.all(Doctor)
   end

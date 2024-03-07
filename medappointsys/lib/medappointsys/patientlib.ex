@@ -3,7 +3,7 @@ defmodule Medappointsys.Patientlib do
   alias Medappointsys.Queries.Appointments
   alias Medappointsys.Queries.Doctors
   alias Medappointsys.Schemas.{Patient, Doctor, Timerange, Admin, Appointment, Date}
-
+  #
   def patientMenu(patientStruct) do
 
     IO.write("""
@@ -162,7 +162,7 @@ defmodule Medappointsys.Patientlib do
 
     8 -> System.halt(0)
 
-     _  -> patientMenu(patientStruct)
+     _  -> viewAppoint(patientStruct)
     end
   end
 

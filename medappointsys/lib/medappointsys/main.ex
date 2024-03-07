@@ -173,6 +173,8 @@ defmodule Medappointsys.Main do
     end
   end
 
+  #
+
   def register_patient() do
     IO.puts("Enter the following fields")
     email = inputCheck("Email", :email)

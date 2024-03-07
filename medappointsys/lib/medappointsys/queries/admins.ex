@@ -3,13 +3,14 @@ defmodule Medappointsys.Queries.Admins do
   alias Medappointsys.Queries.{Admins, Doctors, Patients}
   alias MedAppointSys.Repo
   alias Medappointsys.Schemas.{Admin, Doctor, Patient}
-
+  #
   def list_admins do
     Repo.all(Admin)
   end
 
   def get_admin!(id), do: Repo.get!(Admin, id)
 
+  #
   # -------------------------------------------------------------------------------------------------------------#
   def find_admin(email) do
     case Repo.get_by(Admin, email: email) do

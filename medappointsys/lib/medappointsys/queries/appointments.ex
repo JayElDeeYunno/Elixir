@@ -4,7 +4,7 @@ defmodule Medappointsys.Queries.Appointments do
   alias Medappointsys.Schemas.Appointment
   alias Medappointsys.Schemas.Doctor
   alias Medappointsys.Schemas.Patient
-
+  #
   def list_appointments do
     Repo.all(from a in Appointment, order_by: [desc: a.updated_at], preload: [:patient, :doctor, :date, :timerange])
   end

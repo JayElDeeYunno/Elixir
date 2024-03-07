@@ -3,7 +3,7 @@ defmodule Medappointsys.Queries.Patients do
   alias MedAppointSys.Repo
   alias Medappointsys.Schemas.Patient
   alias Medapppointsys.Main, as: Main
-
+  #
   def list_patients do
     Repo.all(Patient)
   end

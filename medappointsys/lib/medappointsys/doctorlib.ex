@@ -1,6 +1,6 @@
 defmodule Medappointsys.Doctorlib do
   alias Medappointsys.Main
-
+  #
   def doctorMenu(doctorStruct) do
 
     IO.write("""
