@@ -129,6 +129,7 @@ defmodule Medappointsys.Doctorlib do
               | Unavailable date has been removed.                                                   |
               ╰──────────────────────────────────────────────────────────────────────────────────────╯
               """)
+
               setUnavailability(doctorStruct)
 
             _ -> delete_unavailability(doctorStruct, unavailabilities_list)
@@ -236,12 +237,13 @@ defmodule Medappointsys.Doctorlib do
     end
   end
 
+
   def viewAppointmentRequests(doctorStruct) do
     appointment_request_list = Appointments.filter_doctor_appointments(doctorStruct.id, ["Pending", "Reschedule"]) |> Main.ensure_list()
 
     len = length(appointment_request_list)
     back = len + 1
-    halt = len + 1
+    halt = len + 2
 
     Main.displayAppointments(appointment_request_list, "Appointment Requests", "Doctor")
     appointment_input = Main.inputCheck("Input", :integer)
@@ -260,7 +262,7 @@ defmodule Medappointsys.Doctorlib do
 
     len = length(active_appointment_list)
     back = len + 1
-    halt = len + 1
+    halt = len + 2
 
     Main.displayAppointments(active_appointment_list, "Upcoming Appointments", "Doctor")
     appointment_input = Main.inputCheck("Input", :integer)
@@ -279,7 +281,7 @@ defmodule Medappointsys.Doctorlib do
 
     len = length(appointment_list)
     back = len + 1
-    halt = len + 1
+    halt = len + 2
 
     Main.displayAppointments(appointment_list, "All Appointments", "Doctor")
     appointment_input = Main.inputCheck("Input", :integer)
@@ -297,7 +299,7 @@ defmodule Medappointsys.Doctorlib do
 
     len = length(appointment_list)
     back = len + 1
-    halt = len + 1
+    halt = len + 2
 
     Main.displayAppointments(appointment_list, "All Appointments", "Doctor")
     appointment_input = Main.inputCheck("Input", :integer)
@@ -372,7 +374,7 @@ defmodule Medappointsys.Doctorlib do
 
     len = length(patient_list)
     back = len + 1
-    halt = len + 1
+    halt = len + 2
 
     Main.displayAppointments(patient_list, "Your Patient List", "Doctor")
     patient_input = Main.inputCheck("Input", :integer)

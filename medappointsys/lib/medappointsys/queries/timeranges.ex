@@ -1,5 +1,4 @@
 defmodule Medappointsys.Queries.Timeranges do
-  import Ecto.Query
   alias MedAppointSys.Repo
   alias Medappointsys.Schemas.Timerange
 

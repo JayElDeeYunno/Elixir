@@ -1,9 +1,7 @@
 defmodule Medappointsys.Queries.Patients do
   import Ecto.Query
-  alias Medappointsys.Queries.Appointments
   alias MedAppointSys.Repo
   alias Medappointsys.Schemas.{Patient, Timerange, Appointment, Doctor, Date}
-  alias Medappointsys.Main, as: Main
 
   def list_patients do
     Repo.all(Patient)
