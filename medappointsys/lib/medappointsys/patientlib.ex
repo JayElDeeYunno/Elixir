@@ -2,9 +2,7 @@ defmodule Medappointsys.Patientlib do
   alias Medappointsys.Main
   alias Medappointsys.Queries.Appointments
   alias Medappointsys.Queries.Doctors
-  alias Medappointsys.Queries.Dates, as: Dates
-  alias Medappointsys.Schemas.{Patient, Doctor, Timerange, Admin, Appointment, Date}
-  #
+
   def patientMenu(patientStruct) do
     IO.write("""
     ╭─────────────────────────────╮
@@ -43,11 +41,9 @@ defmodule Medappointsys.Patientlib do
         viewAppoint(patientStruct)
         patientMenu(patientStruct)
 
-      6 ->
-        :ok
+      6 -> :ok
 
-      7 ->
-        System.halt(0)
+      7 -> System.halt(0)
 
       _ ->
         patientMenu(patientStruct)
@@ -60,7 +56,6 @@ defmodule Medappointsys.Patientlib do
     | #{patientStruct.firstname} #{patientStruct.lastname}'s Notifications
     |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
     """)
-
     Appointments.get_patient_appointments(patientStruct.id)
     |> Enum.each(fn appointment ->
       IO.write("""
@@ -68,93 +63,67 @@ defmodule Medappointsys.Patientlib do
       |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
       """)
     end)
-
     IO.write("""
     ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
     """)
   end
 
-  def requestAppoint(patientStruct) do
-    doctorList = Doctors.list_doctors()
-    len = length(doctorList)
-    back = len + 1
+  def timeslot_scheduling(patientStruct, doctor_list, chosen_input) do
+    case Enum.fetch(doctor_list, chosen_input - 1) do
+      {:ok, selected_doctor} ->
 
-    IO.write("""
-    ╭───────────────────────────────────────────────────────╮
-    | Select a Doctor for Appointment
-    |───────────────────────────────────────────────────────|
-    """)
+        unavailabilities = Doctors.list_unavailabilities(selected_doctor.id)
+        selected_date = Main.isUnavailableDate(selected_doctor, unavailabilities)
 
-    Enum.with_index(doctorList)
-    |> Enum.each(fn {doctor, index} ->
-      IO.write("""
-      | (#{index + 1}) Dr. #{doctor.firstname} #{doctor.lastname}, #{doctor.specialization}
-      """)
-    end)
+        doctor_timeranges = Doctors.get_timeranges(selected_doctor)
+        existing_appointments = Appointments.filter_date_doctor_appointments(selected_doctor.id, selected_date.id, ["Pending", "Reschedule", "Confirmed"])
 
-    IO.write("""
-    | (#{back}) Back
-    ╰───────────────────────────────────────────────────────╯
-    """)
-
-    doctor_input = Main.inputCheck("Input", :integer)
-
-    case doctor_input do
-      ^back ->
-        :ok
-
-      _ ->
-        case Enum.fetch(doctorList, doctor_input - 1) do
-          {:ok, selected_doctor} ->
-            IO.puts(
-              "Selected Doctor: Dr. #{selected_doctor.firstname} #{selected_doctor.lastname}"
-            )
-
-            unavailabilities = Doctors.list_unavailabilities(selected_doctor.id)
-            selected_date = Main.isUnavailableDate(selected_doctor, unavailabilities)
-
-            doctor_timeranges = Doctors.get_timeranges(selected_doctor)
-            existing_appointments = Appointments.filter_date_doctor_appointments(selected_doctor.id, selected_date.id, ["Pending", "Reschedule", "Confirmed"])
-
-            available_timeranges =
-              doctor_timeranges
-              |> Enum.reject(fn timerange ->
-                Enum.any?(existing_appointments, fn appointment ->
-                  appointment.timerange_id == timerange.id and appointment.date_id == selected_date.id
-                end)
-              end)
-
-
-            IO.write("""
-            ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
-            | Available Time Slots
-            |─────────────────────────────────────────────────────────────────────────────────────────────────|
-            """)
-
-            Enum.with_index(available_timeranges)
-            |> Enum.each(fn {timerange, index} ->
-              IO.write("""
-              | (#{index + 1}) #{timerange.start_time} - #{timerange.end_time}
-              """)
+        available_timeranges =
+          doctor_timeranges
+          |> Enum.reject(fn timerange ->
+            Enum.any?(existing_appointments, fn appointment ->
+              appointment.timerange_id == timerange.id and appointment.date_id == selected_date.id
             end)
+          end)
 
-            IO.write("""
-            |─────────────────────────────────────────────────────────────────────────────────────────────────|
-            |
-            ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
-            """)
+        len = length(available_timeranges)
+        back = len + 1
+        halt = len + 2
 
-            timerange_input =
-              Main.inputCheck("Select Time Range (Input the corresponding number)", :integer)
+        IO.write("""
+        ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
+        | Available Time Slots for Dr. #{selected_doctor.lastname}
+        |─────────────────────────────────────────────────────────────────────────────────────────────────|
+        """)
 
+        Enum.with_index(available_timeranges)
+        |> Enum.each(fn {timerange, index} ->
+          IO.write("""
+          | (#{index + 1}) #{timerange.start_time} - #{timerange.end_time}
+          """)
+        end)
+
+        IO.write("""
+        |─────────────────────────────────────────────────────────────────────────────────────────────────|
+        | (#{back}) Back
+        | (#{halt}) Halt
+        ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
+        """)
+
+        timerange_input = Main.inputCheck("Select Time Range (Input the corresponding number)", :integer)
+
+        case timerange_input do
+          ^back -> :ok
+          ^halt -> System.halt(0)
+          _ ->
             case Enum.fetch(available_timeranges, timerange_input - 1) do
               {:ok, selected_timerange} ->
-                IO.puts(
-                  "Selected Time Range: #{selected_timerange.start_time} - #{selected_timerange.end_time}"
-                )
-
+                IO.puts("""
+                ╭──────────────────────────────────────────────────────────────────────────────────────────────────╮
+                | Selected Time Range: #{selected_timerange.start_time} - #{selected_timerange.end_time}
+                ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                """)
                 reason = Main.inputCheck("Enter Reason", :string)
-
                 Appointments.create_appointment(%{
                   patient_id: patientStruct.id,
                   doctor_id: selected_doctor.id,
@@ -169,14 +138,234 @@ defmodule Medappointsys.Patientlib do
                 | Your appointment request has been submitted. Please await confirmation from the doctor.
                 ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
                 """)
+                requestAppoint(patientStruct)
 
-              _ ->
-                IO.puts("Invalid time range selection.")
+              _ -> timeslot_scheduling(patientStruct, doctor_list, chosen_input)
             end
-
-          _ ->
-            IO.puts("Invalid selection.")
         end
+
+        _ -> requestAppoint(patientStruct)
+      end
+  end
+
+  def requestAppoint(patientStruct) do
+
+    doctor_list = Doctors.list_doctors()
+    len = length(doctor_list)
+    back = len + 1
+    halt = len + 2
+
+    IO.write("""
+    ╭───────────────────────────────────────────────────────╮
+    | Select a Doctor for Appointment
+    |───────────────────────────────────────────────────────|
+    """)
+    Enum.with_index(doctor_list)
+    |> Enum.each(fn {doctor, index} ->
+    IO.write("""
+    | (#{index + 1}) Dr. #{doctor.firstname} #{doctor.lastname}, #{doctor.specialization}
+    """)
+    end)
+    IO.write("""
+    | (#{back}) Back
+    | (#{halt}) Halt
+    ╰───────────────────────────────────────────────────────╯
+    """)
+
+    doctor_input = Main.inputCheck("Input", :integer)
+
+    case doctor_input do
+      ^back -> :ok
+      ^halt -> System.halt(0)
+
+      _ -> timeslot_scheduling(patientStruct, doctor_list, doctor_input)
+
+    end
+  end
+
+  def pending_resched_request(patientStruct, pending_appointments_list, chosen_index) do
+    case Enum.fetch(pending_appointments_list, chosen_index - 1) do
+      {:ok, selected_appointment} ->
+
+        Main.displayAppointments([selected_appointment], "Selected Appointment", "Patient", false)
+
+        unavailabilities = Doctors.list_unavailabilities(selected_appointment.doctor.id)
+        selected_date = Main.isUnavailableDate(selected_appointment.doctor, unavailabilities)
+
+        doctor_timeranges = Doctors.get_timeranges(selected_appointment.doctor)
+        existing_appointments = Appointments.filter_date_doctor_appointments(selected_appointment.doctor.id, selected_date.id, ["Pending", "Reschedule", "Confirmed"])
+
+        available_timeranges =
+          doctor_timeranges
+          |> Enum.reject(fn timerange ->
+            Enum.any?(existing_appointments, fn appointment ->
+              appointment.timerange_id == timerange.id and appointment.date_id == selected_date.id
+            end)
+          end)
+
+        len = length(available_timeranges)
+        back = len + 1
+        halt = len + 2
+
+        IO.write("""
+        ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
+        | Available Time Slots                                                                            |
+        |─────────────────────────────────────────────────────────────────────────────────────────────────|
+        """)
+        Enum.with_index(available_timeranges)
+        |> Enum.each(fn {timerange, index} ->
+        IO.write("""
+        | (#{index + 1}) #{timerange.start_time} - #{timerange.end_time}
+        """)
+        end)
+        IO.write("""
+        |─────────────────────────────────────────────────────────────────────────────────────────────────|
+        | (#{back}) Back                                                                                  |
+        | (#{halt}) Halt                                                                                  |
+        ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
+        """)
+
+        timerange_input = Main.inputCheck("Select Time Range (Input the corresponding number)", :integer)
+
+        case Enum.fetch(available_timeranges, timerange_input - 1) do
+          {:ok, selected_timerange} ->
+            IO.write("""
+            ╭──────────────────────────────────────────────────────────────────────────────────────────────────╮
+            | Selected Time Range: #{selected_timerange.start_time} - #{selected_timerange.end_time}
+            ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+            """)
+
+            update_attrs = %{
+              date_id: selected_date.id,
+              timerange_id: selected_timerange.id,
+              status: "Reschedule"
+            }
+
+            Appointments.update_appointment(selected_appointment, update_attrs)
+
+            IO.write("""
+            ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
+            | Your reschedule request has been submitted. Please wait for Doctor Confirmation                 |
+            ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
+            """)
+            _ ->
+              IO.puts("Invalid time slot")
+              pending_resched_request(patientStruct, pending_appointments_list, chosen_index)
+        end
+        _ -> pending_resched_menu(patientStruct)
+      end
+  end
+
+  def pending_resched_menu(patientStruct) do
+    pending_appointments_list = Appointments.filter_patient_appointments(patientStruct.id, ["Pending"])
+
+    len = length(pending_appointments_list)
+    back = len + 1
+    halt = len + 2
+
+    Main.displayAppointments(pending_appointments_list, "Your Pending Appointments List", "Patient")
+
+    appointment_input = Main.inputCheck("Input", :integer)
+
+    case appointment_input do
+      ^back -> :ok
+      ^halt -> System.halt(0)
+
+      _ -> pending_resched_request(patientStruct, pending_appointments_list, appointment_input)
+
+    end
+  end
+
+  def active_resched_menu(patientStruct) do
+    confirmed_appointments_list =
+      Appointments.filter_patient_appointments(patientStruct.id, ["Confirmed"])
+
+    len = length(confirmed_appointments_list)
+    back = len + 1
+    halt = len + 2
+
+    Main.displayAppointments(confirmed_appointments_list, "Your Active Appointments List", "Patient")
+    appointment_input = Main.inputCheck("Input", :integer)
+
+    case appointment_input do
+      ^back -> :ok
+      ^halt -> System.halt(0)
+
+      _ -> active_resched_request(patientStruct, confirmed_appointments_list, appointment_input)
+
+    end
+  end
+
+  def active_resched_request(patientStruct, confirmed_appointments_list, chosen_index) do
+    case Enum.fetch(confirmed_appointments_list, chosen_index - 1) do
+      {:ok, selected_appointment} ->
+
+        Main.displayAppointments([selected_appointment], "Selected Appointment", "Patient", false)
+
+        unavailabilities = Doctors.list_unavailabilities(selected_appointment.doctor.id)
+        selected_date = Main.isUnavailableDate(selected_appointment.doctor, unavailabilities)
+
+        doctor_timeranges = Doctors.get_timeranges(selected_appointment.doctor)
+        existing_appointments = Appointments.filter_date_doctor_appointments(selected_appointment.doctor.id, selected_date.id, ["Pending", "Reschedule", "Confirmed"])
+
+        available_timeranges =
+          doctor_timeranges
+          |> Enum.reject(fn timerange ->
+            Enum.any?(existing_appointments, fn appointment ->
+              appointment.timerange_id == timerange.id and appointment.date_id == selected_date.id
+            end)
+          end)
+
+        len = length(available_timeranges)
+        back = len + 1
+        halt = len + 2
+
+        IO.write("""
+        ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
+        | Available Time Slots                                                                            |
+        |─────────────────────────────────────────────────────────────────────────────────────────────────|
+        """)
+        Enum.with_index(available_timeranges)
+        |> Enum.each(fn {timerange, index} ->
+          IO.write("""
+          | (#{index}) #{timerange.start_time} - #{timerange.end_time}
+          """)
+        end)
+        IO.write("""
+        |─────────────────────────────────────────────────────────────────────────────────────────────────|
+        | (#{back}) Back                                                                                  |
+        | (#{halt}) Halt                                                                                               |
+        ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
+        """)
+
+        timerange_input =
+          Main.inputCheck("Select Time Range (Input the corresponding number)", :integer)
+
+        case Enum.fetch(available_timeranges, timerange_input - 1) do
+          {:ok, selected_timerange} ->
+            IO.puts("""
+            ╭──────────────────────────────────────────────────────────────────────────────────────────────────╮
+            | Selected Time Range: #{selected_timerange.start_time} - #{selected_timerange.end_time}
+            ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+            """)
+
+            update_attrs = %{
+              date_id: selected_date.id,
+              timerange_id: selected_timerange.id,
+              status: "Reschedule"
+            }
+
+            Appointments.update_appointment(selected_appointment, update_attrs)
+
+            IO.write("""
+            ╭──────────────────────────────────────────────────────────────────────────────────────╮
+            | Your reschedule request has been submitted. Please wait for Doctor Confirmation      |
+            ╰──────────────────────────────────────────────────────────────────────────────────────╯
+            """)
+          _ -> active_resched_request(patientStruct, confirmed_appointments_list, chosen_index)
+        end
+
+        _ -> active_resched_menu(patientStruct)
     end
   end
 
@@ -188,246 +377,106 @@ defmodule Medappointsys.Patientlib do
     | (1) Pending Appointments    |
     | (2) Active Appointments     |
     | (3) Back                    |
+    | (4) Exit                    |
     ╰─────────────────────────────╯
     """)
 
     reschedule_input = Main.inputCheck("Input", :integer)
 
     case reschedule_input do
-      1 ->
-        pending_appointments_list =
-          Appointments.filter_patient_appointments(patientStruct.id, ["Pending"])
+      1 -> pending_resched_menu(patientStruct)
 
-        len = length(pending_appointments_list)
-        back = len + 1
+      2 -> active_resched_menu(patientStruct)
 
-        IO.write("""
-        ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
-        | Your Pending Appointments List
-        |─────────────────────────────────────────────────────────────────────────────────────────────────|
-        """)
+      3 -> :ok
 
-        Enum.with_index(pending_appointments_list)
-        |> Enum.each(fn {appointment, index} ->
-          IO.write("""
-          | (#{index + 1}) Appointment
-          | Doctor: #{appointment.doctor.firstname} #{appointment.doctor.lastname}, Specialty: #{appointment.doctor.specialization}
-          | Date: #{appointment.date.date}, Time: #{appointment.timerange.start_time}-#{appointment.timerange.end_time}, Reason: #{appointment.reason}, Status: #{appointment.status}
-          |─────────────────────────────────────────────────────────────────────────────────────────────────|
-          """)
-        end)
+      4 -> System.halt(0)
 
-        IO.write("""
-        | Note: Rescheduling pending will automatically change the date of the requested appointment
-        | (#{back}) Back
-        ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
-        """)
-
-        appointment_input = Main.inputCheck("Input", :integer)
-
-        case appointment_input do
-          ^back ->
-            :ok
-
-          _ ->
-            case Enum.fetch(pending_appointments_list, appointment_input - 1) do
-              {:ok, selected_appointment} ->
-                IO.write("""
-                ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
-                | Selected Appointment                                                                            |
-                |─────────────────────────────────────────────────────────────────────────────────────────────────|
-                """)
-
-                IO.write("""
-                | Doctor: #{selected_appointment.doctor.firstname} #{selected_appointment.doctor.lastname}, Specialty: #{selected_appointment.doctor.specialization}
-                | Date: #{selected_appointment.date.date}, Time: #{selected_appointment.timerange.start_time}-#{selected_appointment.timerange.end_time}, Reason: #{selected_appointment.reason}, Status: #{selected_appointment.status}
-                |─────────────────────────────────────────────────────────────────────────────────────────────────|
-                """)
-
-                IO.write("""
-                | Note: Rescheduling pending will automatically change the date of the requested appointment      |
-                ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
-                """)
-
-                unavailabilities = Doctors.list_unavailabilities(selected_appointment.doctor.id)
-                selected_date = Main.isUnavailableDate(selected_appointment.doctor, unavailabilities)
-
-                doctor_timeranges = Doctors.get_timeranges(selected_appointment.doctor)
-                existing_appointments = Appointments.filter_date_doctor_appointments(selected_appointment.doctor.id, selected_date.id, ["Pending", "Reschedule", "Confirmed"])
-
-                available_timeranges =
-                  doctor_timeranges
-                  |> Enum.reject(fn timerange ->
-                    Enum.any?(existing_appointments, fn appointment ->
-                      appointment.timerange_id == timerange.id and appointment.date_id == selected_date.id
-                    end)
-                  end)
-
-                IO.write("""
-                ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
-                | Available Time Slots                                                                            |
-                |─────────────────────────────────────────────────────────────────────────────────────────────────|
-                """)
-
-                Enum.with_index(available_timeranges)
-                |> Enum.each(fn {timerange, index} ->
-                  IO.write("""
-                  | (#{index + 1}) #{timerange.start_time} - #{timerange.end_time}
-                  """)
-                end)
-
-                IO.write("""
-                |─────────────────────────────────────────────────────────────────────────────────────────────────|
-                |                                                                                                 |
-                ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
-                """)
-
-                timerange_input =
-                  Main.inputCheck("Select Time Range (Input the corresponding number)", :integer)
-
-                case Enum.fetch(available_timeranges, timerange_input - 1) do
-                  {:ok, selected_timerange} ->
-                    IO.puts(
-                      "Selected Time Range: #{selected_timerange.start_time} - #{selected_timerange.end_time}"
-                    )
-
-                    update_attrs = %{
-                      date_id: selected_date.id,
-                      timerange_id: selected_timerange.id,
-                      status: "Reschedule"
-                    }
-
-                    Appointments.update_appointment(selected_appointment, update_attrs)
-
-                    IO.write("""
-                    ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
-                    | Your appointment request has been successfully updated.                                         |
-                    ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
-                    """)
-                end
-            end
-        end
-
-      2 ->
-        confirmed_appointments_list =
-          Appointments.filter_patient_appointments(patientStruct.id, ["Confirmed"])
-
-        len = length(confirmed_appointments_list)
-        back = len + 1
-
-        IO.write("""
-        ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
-        | Your Active Appointments List                                                                   |
-        |─────────────────────────────────────────────────────────────────────────────────────────────────|
-        """)
-
-        Enum.with_index(confirmed_appointments_list)
-        |> Enum.each(fn {appointment, index} ->
-          IO.write("""
-          | (#{index + 1}) Appointment
-          | Doctor: #{appointment.doctor.firstname} #{appointment.doctor.lastname}, Specialty: #{appointment.doctor.specialization}
-          | Date: #{appointment.date.date}, Time: #{appointment.timerange.start_time}-#{appointment.timerange.end_time}, Reason: #{appointment.reason}, Status: #{appointment.status}
-          |─────────────────────────────────────────────────────────────────────────────────────────────────|
-          """)
-        end)
-
-        IO.write("""
-        | Note: The confirmed appointment will be rescheduled, requiring confirmation by the doctor.      |
-        | (#{back}) Back                                                                                  |
-        ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
-        """)
-
-        appointment_input = Main.inputCheck("Input", :integer)
-
-        case appointment_input do
-          ^back ->
-            :ok
-
-          _ ->
-            case Enum.fetch(confirmed_appointments_list, appointment_input - 1) do
-              {:ok, selected_appointment} ->
-                IO.write("""
-                ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
-                | Selected Appointment
-                |─────────────────────────────────────────────────────────────────────────────────────────────────|
-                """)
-
-                IO.write("""
-                | Doctor: #{selected_appointment.doctor.firstname} #{selected_appointment.doctor.lastname}, Specialty: #{selected_appointment.doctor.specialization}
-                | Date: #{selected_appointment.date.date}, Time: #{selected_appointment.timerange.start_time}-#{selected_appointment.timerange.end_time}, Reason: #{selected_appointment.reason}, Status: #{selected_appointment.status}
-                |─────────────────────────────────────────────────────────────────────────────────────────────────|
-                """)
-
-                IO.write("""
-                ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
-                """)
-
-                unavailabilities = Doctors.list_unavailabilities(selected_appointment.doctor.id)
-                selected_date = Main.isUnavailableDate(selected_appointment.doctor, unavailabilities)
-
-                doctor_timeranges = Doctors.get_timeranges(selected_appointment.doctor)
-                existing_appointments = Appointments.filter_date_doctor_appointments(selected_appointment.doctor.id, selected_date.id, ["Pending", "Reschedule", "Confirmed"])
-
-                available_timeranges =
-                  doctor_timeranges
-                  |> Enum.reject(fn timerange ->
-                    Enum.any?(existing_appointments, fn appointment ->
-                      appointment.timerange_id == timerange.id and appointment.date_id == selected_date.id
-                    end)
-                  end)
-
-                IO.write("""
-                ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
-                | Available Time Slots                                                                            |
-                |─────────────────────────────────────────────────────────────────────────────────────────────────|
-                """)
-
-                Enum.with_index(available_timeranges)
-                |> Enum.each(fn {timerange, index} ->
-                  IO.write("""
-                  | (#{index}) #{timerange.start_time} - #{timerange.end_time}
-                  """)
-                end)
-
-                IO.write("""
-                |─────────────────────────────────────────────────────────────────────────────────────────────────|
-                |                                                                                                 |
-                ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
-                """)
-
-                timerange_input =
-                  Main.inputCheck("Select Time Range (Input the corresponding number)", :integer)
-
-                case Enum.fetch(available_timeranges, timerange_input - 1) do
-                  {:ok, selected_timerange} ->
-                    IO.puts(
-                      "Selected Time Range: #{selected_timerange.start_time} - #{selected_timerange.end_time}"
-                    )
-
-                    update_attrs = %{
-                      date_id: selected_date.id,
-                      timerange_id: selected_timerange.id,
-                      status: "Reschedule"
-                    }
-
-                    Appointments.update_appointment(selected_appointment, update_attrs)
-
-                    IO.write("""
-                    ╭──────────────────────────────────────────────────────────────────────────────────────╮
-                    | Your reschedule request has been submitted. Please wait for Doctor Confirmation      |
-                    ╰──────────────────────────────────────────────────────────────────────────────────────╯
-                    """)
-                end
-            end
-        end
-
-      3 ->
-        :ok
-
-      _ ->
-        IO.puts("Invalid selection.")
+      _ -> reschedAppoint(patientStruct)
     end
   end
+
+  def confirm_cancel_menu(patientStruct) do
+    active_appointments_list = Appointments.filter_patient_appointments(patientStruct.id, ["Confirmed"])
+
+      len = length(active_appointments_list)
+      back = len + 1
+      halt = len + 2
+
+      Main.displayAppointments(active_appointments_list, "Your Active Appointments List", "Patient")
+      appointment_input = Main.inputCheck("Input", :integer)
+
+      case appointment_input do
+        ^back -> :ok
+        ^halt -> System.halt(0)
+
+        _ -> general_cancel_request(patientStruct, active_appointments_list, appointment_input, :confirm)
+
+      end
+  end
+
+  def pending_cancel_menu(patientStruct) do
+    pending_appointments_list = Appointments.filter_patient_appointments(patientStruct.id, ["Pending"])
+
+      len = length(pending_appointments_list)
+      back = len + 1
+      halt = len + 2
+
+      Main.displayAppointments(pending_appointments_list, "Your Active Appointments List", "Patient")
+      appointment_input = Main.inputCheck("Input", :integer)
+
+      case appointment_input do
+        ^back -> :ok
+        ^halt -> System.halt(0)
+
+        _ -> general_cancel_request(patientStruct, pending_appointments_list, appointment_input, :pending)
+
+      end
+  end
+
+  def reschedule_cancel_menu(patientStruct) do
+    reschedule_appointments_list = Appointments.filter_patient_appointments(patientStruct.id, ["Reschedule"])
+
+      len = length(reschedule_appointments_list)
+      back = len + 1
+      halt = len + 2
+
+      Main.displayAppointments(reschedule_appointments_list, "Your Active Appointments List", "Patient")
+      appointment_input = Main.inputCheck("Input", :integer)
+
+      case appointment_input do
+        ^back -> :ok
+        ^halt -> System.halt(0)
+
+        _ -> general_cancel_request(patientStruct, reschedule_appointments_list, appointment_input, :reschedule)
+
+      end
+  end
+
+  def general_cancel_request(patientStruct, appointments_list, chosen_index, label) do
+    case Enum.fetch(appointments_list, chosen_index - 1) do
+      {:ok, selected_appointment} ->
+
+        Main.displayAppointments([selected_appointment], "Selected Appointment", "Patient", false)
+
+        update_attrs = %{status: "Cancelled"}
+        Appointments.update_appointment(selected_appointment, update_attrs)
+
+        IO.write("""
+        ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
+        | The selected appointment has been cancelled.                                                    |
+        ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
+        """)
+
+      _ ->
+        case label do
+          :confirm -> confirm_cancel_menu(patientStruct)
+          :pending -> pending_cancel_menu(patientStruct)
+          :reschedule -> reschedule_cancel_menu(patientStruct)
+        end
+    end
+  end
+
 
   def cancelAppoint(patientStruct) do
     IO.write("""
@@ -444,206 +493,15 @@ defmodule Medappointsys.Patientlib do
     cancel_input = Main.inputCheck("Input", :integer)
 
     case cancel_input do
-      1 ->
-        active_appointments_list =
-          Appointments.filter_patient_appointments(patientStruct.id, ["Confirmed"])
+      1 -> confirm_cancel_menu(patientStruct)
 
-        len = length(active_appointments_list)
-        back = len + 1
+      2 -> pending_cancel_menu(patientStruct)
 
-        IO.write("""
-        ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
-        | Your Active Appointments List
-        |─────────────────────────────────────────────────────────────────────────────────────────────────|
-        """)
+      3 -> reschedule_cancel_menu(patientStruct)
 
-        Enum.with_index(active_appointments_list)
-        |> Enum.each(fn {appointment, index} ->
-          IO.write("""
-          | (#{index + 1}) Appointment
-          | Doctor: #{appointment.doctor.firstname} #{appointment.doctor.lastname}, Specialty: #{appointment.doctor.specialization}
-          | Date: #{appointment.date.date}, Time: #{appointment.timerange.start_time}-#{appointment.timerange.end_time}, Reason: #{appointment.reason}, Status: #{appointment.status}
-          |─────────────────────────────────────────────────────────────────────────────────────────────────|
-          """)
-        end)
+      4 -> :ok
 
-        IO.write("""
-        | (#{back}) Back
-        ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
-        """)
-
-        appointment_input = Main.inputCheck("Input", :integer)
-
-        case appointment_input do
-          ^back ->
-            :ok
-
-          _ ->
-            case Enum.fetch(active_appointments_list, appointment_input - 1) do
-              {:ok, selected_appointment} ->
-                IO.write("""
-                ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
-                | Selected Appointment                                                                            |
-                |─────────────────────────────────────────────────────────────────────────────────────────────────|
-                """)
-
-                IO.write("""
-                | Doctor: #{selected_appointment.doctor.firstname} #{selected_appointment.doctor.lastname}, Specialty: #{selected_appointment.doctor.specialization}
-                | Date: #{selected_appointment.date.date}, Time: #{selected_appointment.timerange.start_time}-#{selected_appointment.timerange.end_time}, Reason: #{selected_appointment.reason}, Status: #{selected_appointment.status}
-                |─────────────────────────────────────────────────────────────────────────────────────────────────|
-                """)
-
-                IO.write("""
-                | Note: Rescheduling pending will automatically change the date of the requested appointment      |
-                ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
-                """)
-
-                update_attrs = %{status: "Cancelled"}
-                Appointments.update_appointment(selected_appointment, update_attrs)
-
-                IO.write("""
-                ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
-                | The selected appointment has been cancelled.                                                    |
-                ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
-                """)
-            end
-        end
-
-      2 ->
-        pending_appointments_list =
-          Appointments.filter_patient_appointments(patientStruct.id, ["Pending"])
-
-        len = length(pending_appointments_list)
-        back = len + 1
-
-        IO.write("""
-        ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
-        | Your Pending Appointments List
-        |─────────────────────────────────────────────────────────────────────────────────────────────────|
-        """)
-
-        Enum.with_index(pending_appointments_list)
-        |> Enum.each(fn {appointment, index} ->
-          IO.write("""
-          | (#{index + 1}) Appointment
-          | Doctor: #{appointment.doctor.firstname} #{appointment.doctor.lastname}, Specialty: #{appointment.doctor.specialization}
-          | Date: #{appointment.date.date}, Time: #{appointment.timerange.start_time}-#{appointment.timerange.end_time}, Reason: #{appointment.reason}, Status: #{appointment.status}
-          |─────────────────────────────────────────────────────────────────────────────────────────────────|
-          """)
-        end)
-
-        IO.write("""
-        | (#{back}) Back
-        ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
-        """)
-
-        appointment_input = Main.inputCheck("Input", :integer)
-
-        case appointment_input do
-          ^back ->
-            :ok
-
-          _ ->
-            case Enum.fetch(pending_appointments_list, appointment_input - 1) do
-              {:ok, selected_appointment} ->
-                IO.write("""
-                ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
-                | Selected Appointment                                                                            |
-                |─────────────────────────────────────────────────────────────────────────────────────────────────|
-                """)
-
-                IO.write("""
-                | Doctor: #{selected_appointment.doctor.firstname} #{selected_appointment.doctor.lastname}, Specialty: #{selected_appointment.doctor.specialization}
-                | Date: #{selected_appointment.date.date}, Time: #{selected_appointment.timerange.start_time}-#{selected_appointment.timerange.end_time}, Reason: #{selected_appointment.reason}, Status: #{selected_appointment.status}
-                |─────────────────────────────────────────────────────────────────────────────────────────────────|
-                """)
-
-                IO.write("""
-                | Note: Rescheduling pending will automatically change the date of the requested appointment      |
-                ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
-                """)
-
-                update_attrs = %{status: "Cancelled"}
-                Appointments.update_appointment(selected_appointment, update_attrs)
-
-                IO.write("""
-                  ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
-                  | The selected appointment has been cancelled.                                                    |
-                  ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
-                """)
-            end
-        end
-
-      3 ->
-        reschedule_appointments_list =
-          Appointments.filter_patient_appointments(patientStruct.id, ["Reschedule"])
-
-        len = length(reschedule_appointments_list)
-        back = len + 1
-
-        IO.write("""
-        ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
-        | Your Rescedule Appointments List
-        |─────────────────────────────────────────────────────────────────────────────────────────────────|
-        """)
-
-        Enum.with_index(reschedule_appointments_list)
-        |> Enum.each(fn {appointment, index} ->
-          IO.write("""
-          | (#{index + 1}) Appointment
-          | Doctor: #{appointment.doctor.firstname} #{appointment.doctor.lastname}, Specialty: #{appointment.doctor.specialization}
-          | Date: #{appointment.date.date}, Time: #{appointment.timerange.start_time}-#{appointment.timerange.end_time}, Reason: #{appointment.reason}, Status: #{appointment.status}
-          |─────────────────────────────────────────────────────────────────────────────────────────────────|
-          """)
-        end)
-
-        IO.write("""
-        | (#{back}) Back
-        ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
-        """)
-
-        appointment_input = Main.inputCheck("Input", :integer)
-
-        case appointment_input do
-          ^back ->
-            :ok
-
-          _ ->
-            case Enum.fetch(reschedule_appointments_list, appointment_input - 1) do
-              {:ok, selected_appointment} ->
-                IO.write("""
-                ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
-                | Selected Appointment                                                                            |
-                |─────────────────────────────────────────────────────────────────────────────────────────────────|
-                """)
-
-                IO.write("""
-                | Doctor: #{selected_appointment.doctor.firstname} #{selected_appointment.doctor.lastname}, Specialty: #{selected_appointment.doctor.specialization}
-                | Date: #{selected_appointment.date.date}, Time: #{selected_appointment.timerange.start_time}-#{selected_appointment.timerange.end_time}, Reason: #{selected_appointment.reason}, Status: #{selected_appointment.status}
-                |─────────────────────────────────────────────────────────────────────────────────────────────────|
-                """)
-
-                IO.write("""
-                | Note: Rescheduling pending will automatically change the date of the requested appointment      |
-                ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
-                """)
-
-                update_attrs = %{status: "Cancelled"}
-                Appointments.update_appointment(selected_appointment, update_attrs)
-
-                IO.write("""
-                  ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
-                  | The selected appointment has been cancelled.                                                    |
-                  ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
-                """)
-            end
-        end
-
-      4 ->
-        :ok
-
-      _ ->
-        IO.puts("Invalid selection.")
+      _ -> cancelAppoint(patientStruct)
     end
   end
 
@@ -690,8 +548,7 @@ defmodule Medappointsys.Patientlib do
         cancelledAppoint(patientStruct)
         viewAppoint(patientStruct)
 
-      7 ->
-        :ok
+      7 -> :ok
 
       8 ->
         System.halt(0)
@@ -699,25 +556,6 @@ defmodule Medappointsys.Patientlib do
       _ ->
         viewAppoint(patientStruct)
     end
-  end
-
-  def displayAppoint(patientStruct, appointInfo, type) do
-    IO.write("""
-    ╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-    | #{patientStruct.firstname} #{patientStruct.lastname}'s #{type} Appointments
-    |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
-    """)
-
-    Enum.each(appointInfo, fn appointment ->
-      IO.write("""
-      | Doctor: #{appointment.doctor.firstname} #{appointment.doctor.lastname}, Specialty: #{appointment.doctor.specialization}, Date: #{appointment.date.date}, Time: #{appointment.timerange.start_time}-#{appointment.timerange.end_time}, Reason: #{appointment.reason}, Status: #{appointment.status}
-      |─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────|
-      """)
-    end)
-
-    IO.write("""
-    ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-    """)
   end
 
   def allAppoint(patientStruct) do
@@ -728,32 +566,31 @@ defmodule Medappointsys.Patientlib do
     cancelled = Appointments.filter_patient_appointments(patientStruct.id, ["Cancelled"])
 
     appointInfo = confirmed ++ pending ++ completed ++ resched ++ cancelled
-
-    displayAppoint(patientStruct, appointInfo, "All")
+    Main.displayAppointments(appointInfo, "All Appointments", "Patient")
   end
 
   def activeAppoint(patientStruct) do
     appointInfo = Appointments.filter_patient_appointments(patientStruct.id, ["Confirmed"])
-    displayAppoint(patientStruct, appointInfo, "Active")
+    Main.displayAppointments(appointInfo, "Active Appointments", "Patient")
   end
 
   def pendingAppoint(patientStruct) do
     appointInfo = Appointments.filter_patient_appointments(patientStruct.id, ["Pending"])
-    displayAppoint(patientStruct, appointInfo, "Pending")
+    Main.displayAppointments(appointInfo, "Pending Appointments", "Patient")
   end
 
   def completedAppoint(patientStruct) do
     appointInfo = Appointments.filter_patient_appointments(patientStruct.id, ["Completed"])
-    displayAppoint(patientStruct, appointInfo, "Completed")
+    Main.displayAppointments(appointInfo, "Completed Appointments", "Patient")
   end
 
   def rescheduledAppoint(patientStruct) do
     appointInfo = Appointments.filter_patient_appointments(patientStruct.id, ["Reschedule"])
-    displayAppoint(patientStruct, appointInfo, "Reschedule")
+    Main.displayAppointments(appointInfo, "Reschedule Appointments", "Patient")
   end
 
   def cancelledAppoint(patientStruct) do
     appointInfo = Appointments.filter_patient_appointments(patientStruct.id, ["Cancelled"])
-    displayAppoint(patientStruct, appointInfo, "Cancelled")
+    Main.displayAppointments(appointInfo, "Cancelled Appointments", "Patient")
   end
 end

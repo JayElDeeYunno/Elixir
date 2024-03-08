@@ -1,7 +1,6 @@
 defmodule Medappointsys.Adminlib do
   alias Medappointsys.Main
   alias Medappointsys.Queries.{Appointments, Patients, Doctors}
-  alias Medappointsys.Schemas.{Patient, Doctor, Timerange, Admin, Appointment, Date}
 
   def adminMenu(adminStruct) do
     IO.write("""
@@ -12,9 +11,9 @@ defmodule Medappointsys.Adminlib do
     | (2) View Patients           |
     | (3) View Doctors            |
     | (4) Add Doctor              |
-    | (5) Remove Doctor           |
-    | (6) [Logout]                |
-    | (7) [Exit]                  |
+    |                             |
+    | (5) [Logout]                |
+    | (6) [Exit]                  |
     ╰─────────────────────────────╯
     """)
 
@@ -39,14 +38,62 @@ defmodule Medappointsys.Adminlib do
       adminMenu(adminStruct)
 
     5 -> :ok
-      # removeDoctor(adminStruct)
-      # adminMenu(adminStruct)
 
-    6 -> :ok
-
-    7 -> System.halt(0)
+    6 -> System.halt(0)
 
      _  -> adminMenu(adminStruct)
+    end
+  end
+
+  def full_delete_patient(selected_patient) do
+
+    final_input = Main.dialogBox("CONFIRM FULL DELETION?", ["Confirm"])
+
+    case final_input do
+      1 ->
+        Appointments.get_patient_appointments(selected_patient.id) |> Main.ensure_list()
+        |> Enum.each(fn appointment -> Appointments.delete_appointment(appointment) end)
+
+        Patients.delete_patient(selected_patient)
+
+        IO.write("""
+        ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
+        | The selected patient and their appointemnts has been deleted.                                   |
+        ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
+        """)
+      :ok -> :ok
+
+      _ -> full_delete_patient(selected_patient)
+
+    end
+  end
+  def full_delete_doctor(selected_doctor) do
+    final_input = Main.dialogBox("CONFIRM FULL DELETION?", ["Confirm"])
+
+    case final_input do
+      1 ->
+
+        Appointments.get_doctor_appointments(selected_doctor.id)
+        |> Enum.each(fn appointment -> Appointments.delete_appointment(appointment) end)
+
+        Doctors.get_doctor_timeranges(selected_doctor.id)
+        |> Enum.each(fn doctor_timerange -> Doctors.delete_doctor_timerange(doctor_timerange) end)
+
+        Doctors.list_unavailabilities(selected_doctor.id)
+        |> Enum.each(fn unavailability -> Doctors.delete_unavailability(unavailability) end)
+
+        Doctors.delete_doctor(selected_doctor)
+
+        IO.write("""
+        ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
+        | The selected doctor and its full data is deleted.                                               |
+        ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
+        """)
+
+      :ok -> :ok
+
+      _ -> full_delete_doctor(selected_doctor)
+
     end
   end
 
@@ -82,7 +129,7 @@ defmodule Medappointsys.Adminlib do
       completedAppointList(adminStruct)
       patientAdminOptionList(adminStruct)
     5 ->
-      rescheduledAppointList(adminStruct)
+      rescheduleAppointList(adminStruct)
       patientAdminOptionList(adminStruct)
     6 ->
       cancelledAppointList(adminStruct)
@@ -95,43 +142,6 @@ defmodule Medappointsys.Adminlib do
     end
   end
 
-  def displayAppointList(_adminStruct, appointInfo, type) do
-    IO.write("""
-    ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
-    | #{type} Appointments List
-    |─────────────────────────────────────────────────────────────────────────────────────────────────|
-    """)
-    Enum.each(appointInfo, fn %Appointment{
-      status: status,
-      reason: reason,
-      doctor: %Doctor{
-        firstname: doctor_firstname,
-        lastname: doctor_lastname,
-        specialization: specialization
-      },
-      patient: %Patient {
-        firstname: patient_firstname,
-        lastname: patient_lastname
-      },
-      date: %Date{
-        date: appointment_date
-      },
-      timerange: %Timerange{
-        start_time: start_time,
-        end_time: end_time
-      }
-    } ->
-    IO.write("""
-    | Doctor: #{doctor_firstname} #{doctor_lastname}, Specialty: #{specialization}, Patient: #{patient_firstname} #{patient_lastname}
-    | Date: #{appointment_date}, Time: #{start_time}-#{end_time}, Reason: #{reason}, Status: #{status}
-    |─────────────────────────────────────────────────────────────────────────────────────────────────|
-    """)
-  end)
-    IO.write("""
-    ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
-    """)
-  end
-
   def allAppointList(adminStruct) do
     confirmed = Appointments.list_appointments("Confirmed")
     pending = Appointments.list_appointments("Pending")
@@ -141,33 +151,40 @@ defmodule Medappointsys.Adminlib do
 
     appointInfo = confirmed ++ pending ++ completed ++ resched ++ cancelled
 
-    displayAppointList(adminStruct, appointInfo, "All")
+    Main.displayAppointments(appointInfo, "All Appointments", "Both", false)
+    patientAdminOptionList(adminStruct)
   end
 
   def activeAppointList(adminStruct) do
     appointInfo = Appointments.list_appointments("Confirmed")
-    displayAppointList(adminStruct, appointInfo, "Active")
+    Main.displayAppointments(appointInfo, "Active Appointments", "Both", false)
+    patientAdminOptionList(adminStruct)
   end
 
   def pendingAppointList(adminStruct) do
     appointInfo = Appointments.list_appointments("Pending")
-    displayAppointList(adminStruct, appointInfo, "Pending")
+    Main.displayAppointments(appointInfo, "Pending Appointments", "Both", false)
+    patientAdminOptionList(adminStruct)
   end
 
   def completedAppointList(adminStruct) do
     appointInfo = Appointments.list_appointments("Completed")
-    displayAppointList(adminStruct, appointInfo, "Completed")
+    Main.displayAppointments(appointInfo, "Completed Appointments", "Both", false)
+    patientAdminOptionList(adminStruct)
   end
 
-  def rescheduledAppointList(adminStruct) do
-    appointInfo = Appointments.list_appointments("Rescheduled")
-    displayAppointList(adminStruct, appointInfo, "Rescheduled")
+  def rescheduleAppointList(adminStruct) do
+    appointInfo = Appointments.list_appointments("Reschedule")
+    Main.displayAppointments(appointInfo, "Reschedule Appointments", "Both", false)
+    patientAdminOptionList(adminStruct)
   end
 
   def cancelledAppointList(adminStruct) do
     appointInfo = Appointments.list_appointments("Cancelled")
-    displayAppointList(adminStruct, appointInfo, "Cancelled")
+    Main.displayAppointments(appointInfo, "Cancelled Appointments", "Both", false)
+    patientAdminOptionList(adminStruct)
   end
+
 
   #-----------------------------------------------PATIENT-------------------------------------------------#
 
@@ -212,6 +229,7 @@ defmodule Medappointsys.Adminlib do
 
         end
   end
+
 
   def patientAdminOption(patientStruct) do
     IO.write("""
@@ -312,7 +330,6 @@ defmodule Medappointsys.Adminlib do
     | (#{index + 1}) #{element.firstname} #{element.lastname}, #{element.specialization}
     """)
     end)
-
     IO.write("""
     | (#{back}) Back
     | (#{halt}) Exit
@@ -360,8 +377,9 @@ defmodule Medappointsys.Adminlib do
     | (7) Edit Specialization
     | (8) Edit Email
     | (9) Edit Password
-    | (10) Back
-    | (11) Exit
+    | (10) Delete Doctor
+    | (11) Back
+    | (12) Exit
     |───────────────────────────────────────────────────────|
     """)
 
@@ -407,10 +425,13 @@ defmodule Medappointsys.Adminlib do
       editDoctor(doctorStruct, :password) |>
       doctorAdminOption()
 
-    10 -> :ok
+    10 ->
+      full_delete_doctor(doctorStruct)
+      viewDoctorList()
 
-    11 -> System.halt(0)
+    11 -> :ok
 
+    12 -> System.halt(0)
      _  -> doctorAdminOption(doctorStruct)
     end
 

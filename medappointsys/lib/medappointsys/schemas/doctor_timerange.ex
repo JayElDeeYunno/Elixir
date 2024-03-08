@@ -12,4 +12,5 @@ defmodule Medappointsys.Schemas.DoctorTimerange do
     |> cast(params, [:doctor_id, :timerange_id])
     |> validate_required([:doctor_id, :timerange_id])
   end
+
 end

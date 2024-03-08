@@ -13,7 +13,6 @@ defmodule Medappointsys.Queries.Doctors do
     Repo.all(Doctor)
   end
 
-  @spec get_doctor!(any()) :: any()
   def get_doctor!(id), do: Repo.get!(Doctor, id)
 
   @spec create_doctor() :: {:error, any()} | {:ok, any()}
@@ -97,8 +96,6 @@ defmodule Medappointsys.Queries.Doctors do
   end
 
 
-
-  @spec add_doctor_timerange() :: {:error, any()} | {:ok, any()}
   def add_doctor_timerange(attrs \\ %{}) do
     case %DoctorTimerange{}
     |> DoctorTimerange.changeset(attrs)
@@ -135,8 +132,31 @@ defmodule Medappointsys.Queries.Doctors do
     end
   end
 
+  def delete_doctor_timerange(doctor_timerange) do
+      # Build a changeset for deletion
+      changeset = DoctorTimerange.changeset(doctor_timerange, %{})
 
-  @spec get_available_timeranges(any()) :: list()
+      # Delete the doctor timerange using the changeset
+      case Repo.delete(changeset) do
+        {:ok, _deleted} ->
+          {:ok, "Timerange deleted successfully."}
+
+        {:error, _reason} ->
+          {:error, "Failed to delete timerange."}
+      end
+
+  end
+
+  def get_doctor_timeranges(doctor_id) do
+    Repo.all(
+      from dtr in DoctorTimerange,
+      join: t in Timerange,
+      on: dtr.timerange_id == t.id,
+      where: dtr.doctor_id == ^doctor_id,
+      preload: [:doctor, :timerange]
+    )
+  end
+
   def get_available_timeranges(current_timeranges) do
     all_timeranges = Timeranges.list_timeranges()
     current_timerange_ids = Enum.map(current_timeranges, & &1.id)

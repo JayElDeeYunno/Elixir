@@ -50,7 +50,7 @@ defmodule Medappointsys.Main do
       5 -> {%Admin{} = admin, :admins} = (Admins.find_admin("admin@example.com"))
             AdminLib.adminMenu(admin)
             loginMenu()
-      6 -> {%Doctor{} = doctor, :doctors} = (Doctors.find_doctor("jrtoyoda@example.com"))
+      6 -> {%Doctor{} = doctor, :doctors} = (Doctors.find_doctor("antoniodizon@example.com"))
             DoctorLib.doctorMenu(doctor)
       loginMenu()
       #-----------------------------------------------------------------------#
@@ -161,14 +161,6 @@ defmodule Medappointsys.Main do
     end
   end
 
-  def isFutureDate?(date, gap) do
-    result = ElixirDate.diff(ElixirDate.utc_today(), date) |> abs()
-    cond do
-      result >= gap -> {:ok, date}
-      result < gap -> IO.puts("Invalid date. Please enter a date #{gap} days from now.")
-      :error
-    end
-  end
     #-----------------------------------------------------------------------------------------------------------------#
 
   def isUnavailableDate(selected_doctor, unavailabilities) do
@@ -255,6 +247,116 @@ defmodule Medappointsys.Main do
     end
   end
 
+   #---------------------------------------------------UTILS-------------------------------------------------#
+   def dialogBox(heading, options) do
+
+    len = length(options)
+    back = len + 1
+    halt = len + 2
+
+    IO.write("""
+    ╭───────────────────────────────╮
+    | #{heading}
+    |===============================|
+    """)
+
+    Enum.with_index(options)
+    |> Enum.each(fn {option, index} ->
+    IO.write("""
+    | (#{index + 1}) #{option}
+    """)
+    end)
+    IO.write("""
+    | (#{back}) Back
+    | (#{halt}) Exit
+    ╰───────────────────────────────╯
+    """)
+
+    input = inputCheck("Input", :integer)
+
+    cond do
+      input == back -> :ok
+      input == halt -> System.halt(0)
+      input <= len -> input
+      input > len -> dialogBox(heading, options)
+    end
+  end
+
+  def ensure_list(param) when is_list(param), do: param
+  def ensure_list(param), do: [param]
+
+  def displayAppointments(appointments, heading, pov, hasIndex \\ true) do
+
+    len = length(appointments)
+    back = len + 1
+    halt = len + 2
+
+    if hasIndex == true do
+
+      IO.write("""
+      ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
+      | #{heading}
+      |─────────────────────────────────────────────────────────────────────────────────────────────────|
+      """)
+      Enum.with_index(appointments)
+      |> Enum.each(fn {appointment, index} ->
+      names =
+        case pov do
+          "Patient" -> "#{appointment.doctor.firstname} #{appointment.doctor.lastname}"
+          "Doctor" -> "#{appointment.patient.firstname} #{appointment.patient.lastname}"
+          "Both" -> "#{appointment.patient.firstname} #{appointment.patient.lastname}, Dr. #{appointment.doctor.lastname}"
+        end
+      label =
+        case pov do
+          "Patient" -> "Doctor"
+          "Doctor" -> "Patient"
+          "Both" -> "Doctor & Patent"
+        end
+      IO.write("""
+      | (#{index + 1})
+      | #{label}: #{names}
+      | Reason: #{appointment.reason}, Status: #{appointment.status}
+      | Date: #{appointment.date.date}, Time: #{appointment.timerange.start_time}-#{appointment.timerange.end_time}
+      |─────────────────────────────────────────────────────────────────────────────────────────────────|
+      """)
+      end)
+      IO.write("""
+      | (#{back}) Back
+      | (#{halt}) Exit
+      ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
+      """)
+    else
+      IO.write("""
+      ╭─────────────────────────────────────────────────────────────────────────────────────────────────╮
+      | #{heading}
+      |─────────────────────────────────────────────────────────────────────────────────────────────────|
+      """)
+      Enum.each(appointments, fn appointment ->
+      names =
+        case pov do
+          "Patient" -> "#{appointment.doctor.firstname} #{appointment.doctor.lastname}"
+          "Doctor" -> "#{appointment.patient.firstname} #{appointment.patient.lastname}"
+          "Both" -> "#{appointment.patient.firstname} #{appointment.patient.lastname}, Dr. #{appointment.doctor.lastname}"
+        end
+      label =
+        case pov do
+          "Patient" -> "Doctor"
+          "Doctor" -> "Patient"
+          "Both" -> "Doctor & Patient"
+        end
+      IO.write("""
+      | #{label}: #{names}
+      | Reason: #{appointment.reason}, Status: #{appointment.status}
+      | Date: #{appointment.date.date}, Time: #{appointment.timerange.start_time}-#{appointment.timerange.end_time},
+      |─────────────────────────────────────────────────────────────────────────────────────────────────|
+      """)
+      end)
+      IO.write("""
+      ╰─────────────────────────────────────────────────────────────────────────────────────────────────╯
+      """)
+    end
+
+  end
   # def enclose(string, boxSize, symbol) do
 
   # end

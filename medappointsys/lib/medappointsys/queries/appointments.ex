@@ -70,33 +70,33 @@ defmodule Medappointsys.Queries.Appointments do
     end
   end
 
-  def completed_doctor_appointment(%Appointment{id: appointment_id}) do
-    appointment = Repo.get(Appointment, appointment_id)
+  # def completed_doctor_appointment(%Appointment{id: appointment_id}) do
+  #   appointment = Repo.get(Appointment, appointment_id)
 
-    case appointment do
-      %Appointment{} = appointment ->
-        updated_appointment = %Appointment{appointment | status: "Completed"}
-        Repo.update(updated_appointment)
-        {:ok, "Appointment completed successfully"}
+  #   case appointment do
+  #     %Appointment{} = appointment ->
+  #       updated_appointment = %Appointment{appointment | status: "Completed"}
+  #       Repo.update(updated_appointment)
+  #       {:ok, "Appointment completed successfully"}
 
-      nil ->
-        {:error, "Appointment not found"}
-    end
-  end
+  #     nil ->
+  #       {:error, "Appointment not found"}
+  #   end
+  # end
 
-  def canceled_doctor_appointment(%Appointment{id: appointment_id}) do
-    appointment = Repo.get(Appointment, appointment_id)
+  # def canceled_doctor_appointment(%Appointment{id: appointment_id}) do
+  #   appointment = Repo.get(Appointment, appointment_id)
 
-    case appointment do
-      %Appointment{} = appointment ->
-        updated_appointment = %Appointment{appointment | status: "Cancelled"}
-        Repo.update(updated_appointment)
-        {:ok, "Appointment cancelled successfully"}
+  #   case appointment do
+  #     %Appointment{} = appointment ->
+  #       updated_appointment = %Appointment{appointment | status: "Cancelled"}
+  #       Repo.update(updated_appointment)
+  #       {:ok, "Appointment cancelled successfully"}
 
-      nil ->
-        {:error, "Appointment not found"}
-    end
-  end
+  #     nil ->
+  #       {:error, "Appointment not found"}
+  #   end
+  # end
 
   # Patient Related (pending, confimed, rescheduled, completed, cancelled)
 
@@ -192,22 +192,23 @@ defmodule Medappointsys.Queries.Appointments do
       from a in Appointment,
       join: d in Doctor,
       on: a.doctor_id == d.id,
-      distinct: true,
+      distinct: d.id,
       where: a.patient_id == ^patient_id,
-      preload: [:doctor]
-    ) |> Enum.map(fn %Medappointsys.Schemas.Appointment{doctor: doctor} ->
-      doctor
-    end)
+      select: a,
+      preload: [:patient, :doctor, :date, :timerange]
+    )
   end
 
-  def unique_patients(selected_doctor) do
-    query =
-      from(a in Appointment,
-        where: a.doctor_id == ^selected_doctor.id,
-        join: p in Patient, on: a.patient_id == p.id,
-        distinct: p.id,
-        select: p)
-    Repo.all(query)
+  def unique_patients(doctor_id) do
+    Repo.all(
+      from a in Appointment,
+      join: p in Patient,
+      on: a.patient_id == p.id,
+      distinct: p.id,
+      where: a.doctor_id == ^doctor_id,
+      select: a,
+      preload: [:patient, :doctor, :date, :timerange]
+    )
   end
 
   def request_appointment(%Patient{} = patient, attrs \\ %{}) do
@@ -216,29 +217,29 @@ defmodule Medappointsys.Queries.Appointments do
     |> Repo.insert()
   end
 
-  def reschedule_appointment(%Patient{} = patient, %Appointment{id: appointment_id}) do
-    case get_appointment!(appointment_id) do
-      %Appointment{status: "Pending"} = appointment ->
-        new_appointment_attrs = Map.put(appointment, :status, "Rescheduled")
-        new_appointment = %Appointment{new_appointment_attrs | patient_id: patient.id}
-        Repo.insert(new_appointment)
+  # def reschedule_appointment(%Patient{} = patient, %Appointment{id: appointment_id}) do
+  #   case get_appointment!(appointment_id) do
+  #     %Appointment{status: "Pending"} = appointment ->
+  #       new_appointment_attrs = Map.put(appointment, :status, "Rescheduled")
+  #       new_appointment = %Appointment{new_appointment_attrs | patient_id: patient.id}
+  #       Repo.insert(new_appointment)
 
-      _ ->
-        {:error, "Appointment not found or cannot be rescheduled"}
-    end
-  end
+  #     _ ->
+  #       {:error, "Appointment not found or cannot be rescheduled"}
+  #   end
+  # end
 
-  def cancel_appointment(%Patient{} = patient, appointment_id) do
-    case get_appointment!(appointment_id) do
-      %Appointment{} = appointment ->
-        updated_appointment = %Appointment{appointment | status: "Cancelled"}
-        Repo.update(updated_appointment)
-        {:ok, "Appointment canceled successfully"}
+  # def cancel_appointment(%Patient{} = patient, appointment_id) do
+  #   case get_appointment!(appointment_id) do
+  #     %Appointment{} = appointment ->
+  #       updated_appointment = %Appointment{appointment | status: "Cancelled"}
+  #       Repo.update(updated_appointment)
+  #       {:ok, "Appointment canceled successfully"}
 
-      nil ->
-        {:error, "Appointment not found"}
-    end
-  end
+  #     nil ->
+  #       {:error, "Appointment not found"}
+  #   end
+  # end
 
   # def doctor_view_patients(%Doctor{id: doctor_id}) do
   #   appointments = doctor_appointments(%Doctor{id: doctor_id})

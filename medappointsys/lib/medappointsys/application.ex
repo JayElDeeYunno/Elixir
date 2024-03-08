@@ -1,8 +1,6 @@
 defmodule Medappointsys.Application do
-  alias Medappointsys.Main, as: Main
 
   @moduledoc false
-
   use Application
 
   @impl true

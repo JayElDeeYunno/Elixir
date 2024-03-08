@@ -10,8 +10,8 @@ defmodule Medappointsys.Schemas.Timerange do
 
     many_to_many :doctors, Medappointsys.Schemas.Doctor, join_through: "doctors_timeranges"
 
-    many_to_many :doctors_unavailabilities, Medappointsys.Schemas.Doctor, join_through: "unavailabilities"
-    many_to_many :dates_unavailabilities, Medappointsys.Schemas.Date, join_through: "unavailabilities"
+    # many_to_many :doctors_unavailabilities, Medappointsys.Schemas.Doctor, join_through: "unavailabilities"
+    # many_to_many :dates_unavailabilities, Medappointsys.Schemas.Date, join_through: "unavailabilities"
   end
 
   def changeset(struct, params) do
