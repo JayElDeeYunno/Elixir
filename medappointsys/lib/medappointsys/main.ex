@@ -142,10 +142,6 @@ defmodule Medappointsys.Main do
           {:ok, futureDate} -> futureDate
           :error -> inputCheck(prompt, :date, gap)
         end
-        case isFutureDate?(date, gap) do
-          {:ok, futureDate} -> futureDate
-          :error -> inputCheck(prompt, :date, gap)
-        end
       {:error, _err} ->
         IO.puts("Invalid date. Please enter a date in the format YYYY-MM-DD.")
         inputCheck(prompt, :date, gap)
