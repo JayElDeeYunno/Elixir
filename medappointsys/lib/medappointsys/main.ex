@@ -134,6 +134,13 @@ defmodule Medappointsys.Main do
     end
   end
 
+  @spec inputCheck(binary(), :date, any()) :: %{
+          :calendar => atom(),
+          :day => any(),
+          :month => any(),
+          :year => any(),
+          optional(any()) => any()
+        }
   def inputCheck(prompt, :date, gap) do
     input = IO.gets(prompt <> ": ") |> String.trim()
       case Date.from_iso8601(input) do
@@ -149,10 +156,10 @@ defmodule Medappointsys.Main do
   end
 
   def isFutureDate?(date, gap) do
-    result = ElixirDate.diff(ElixirDate.utc_today(), date) |> abs()
+    result = ElixirDate.diff(ElixirDate.utc_today(), date)
     cond do
-      result >= gap -> {:ok, date}
-      result < gap -> IO.puts("Invalid date. Please enter a date #{gap} days from now.")
+      result <= gap -> {:ok, date}
+      result > gap -> IO.puts("Invalid date. Please enter a date #{gap} days from now.")
       :error
     end
   end
