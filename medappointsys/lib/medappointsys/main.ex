@@ -158,8 +158,8 @@ defmodule Medappointsys.Main do
   def isFutureDate?(date, gap) do
     result = ElixirDate.diff(ElixirDate.utc_today(), date)
     cond do
-      result <= gap -> {:ok, date}
-      result > gap -> IO.puts("Invalid date. Please enter a date #{gap} days from now.")
+      result < gap -> {:ok, date}
+      result >= gap -> IO.puts("Invalid date. Please enter a date #{gap} days from now.")
       :error
     end
   end
